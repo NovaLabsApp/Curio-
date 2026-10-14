@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Curio">
+<meta name="theme-color" content="#0B0F1A">
+<meta name="referrer" content="no-referrer">
+<title>Curio</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+<style>
+  :root {
+    --ink: #0B0F1A;
+    --ivory: #F4EFE4;
+    --muted: #A9AEBB;
+    --gold: #D4AF6A;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; background: var(--ink); color: var(--ivory); font-family: var(--sans); overscroll-behavior: none; -webkit-font-smoothing: antialiased; }
+  button { font-family: inherit; }
+
+  #feed { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+  #feed::-webkit-scrollbar { display: none; }
+
+  .card { position: relative; height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+  .bg { position: absolute; inset: 0; }
+  .bg .letter { position: absolute; right: -3vw; top: 10vh; font: 700 72vw/1 var(--serif); color: rgba(255,255,255,.06); pointer-events: none; }
+  .bg .pic { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity .8s ease; }
+  .bg .pic.on { opacity: 1; }
+  .shade { position: absolute; inset: 0; background:
+      linear-gradient(to top, rgba(8,11,20,.98) 0%, rgba(8,11,20,.88) 30%, rgba(8,11,20,.25) 62%, rgba(8,11,20,0) 78%),
+      linear-gradient(to bottom, rgba(8,11,20,.55) 0%, rgba(8,11,20,0) 22%); }
+
+  .content { position: relative; padding: 0 86px calc(34px + env(safe-area-inset-bottom)) 22px; }
+  .content h2 { margin: 0 0 8px; font: 700 clamp(30px, 8.6vw, 40px)/1.06 var(--serif); letter-spacing: -.015em; text-wrap: balance; }
+  .content .desc { margin: 0 0 14px; font-size: 14.5px; color: var(--gold); letter-spacing: .01em; }
+  .content .text { margin: 0; font-size: 18px; line-height: 1.48; color: #ECE8DD; }
+  .morebtn { margin-top: 18px; height: 42px; padding: 0 20px; border-radius: 21px; border: 1px solid rgba(212,175,106,.55); background: rgba(212,175,106,.1); color: var(--gold); font: 600 15px var(--sans); cursor: pointer; }
+  .morebtn:active { transform: scale(.97); }
+
+  .src { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }
+  .note { margin: 0 0 12px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+  .long { margin: 0; font: 17.5px/1.68 var(--serif); color: #EDE9DE; white-space: pre-line; }
+  .long[hidden] { display: none; }
+  .content.reading { position: absolute; left: 0; right: 0; bottom: 0; max-height: 80dvh; overflow-y: auto; padding: 26px 22px calc(30px + env(safe-area-inset-bottom)); background: rgba(11,15,26,.82); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); border-radius: 28px 28px 0 0; border-top: 1px solid rgba(255,255,255,.12); }
+  .content.reading::before { content: ""; position: absolute; top: 9px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: rgba(255,255,255,.25); }
+  .content.reading .text { margin-bottom: 16px; font-weight: 600; }
+  .card.reading .actions { display: none; }
+
+  .actions { position: absolute; right: 14px; bottom: calc(38px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .btn { width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(11,15,26,.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--ivory); display: grid; place-items: center; cursor: pointer; padding: 0; transition: background .2s, color .2s, border-color .2s; }
+  .btn svg, .tbtn svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .btn:active { transform: scale(.93); }
+  .btn.on { color: var(--gold); border-color: var(--gold); background: rgba(212,175,106,.16); }
+  .btn.on svg { fill: currentColor; }
+  .btn.pop { animation: pop .3s ease-out; }
+  @keyframes pop { 50% { transform: scale(1.2); } }
+
+  #top { position: fixed; left: 0; right: 0; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: calc(12px + env(safe-area-inset-top)) 16px 26px; background: linear-gradient(to bottom, rgba(8,11,20,.6), transparent); pointer-events: none; }
+  #top > * { pointer-events: auto; }
+  .logo { font: 700 24px var(--serif); letter-spacing: -.01em; }
+  .logo i { color: var(--gold); font-style: normal; }
+  .right { display: flex; gap: 10px; }
+  .tbtn { position: relative; width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(11,15,26,.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--ivory); display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .tbtn svg { width: 20px; height: 20px; }
+  .badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--gold); color: #1A1406; font: 700 11px/18px var(--sans); text-align: center; }
+  .badge:empty { display: none; }
+  #hint { position: absolute; left: 0; right: 0; top: calc(64px + env(safe-area-inset-top)); text-align: center; font-size: 13px; color: var(--muted); transition: opacity .6s; pointer-events: none; }
+  #hint.gone { opacity: 0; }
+
+  .center { height: 100dvh; scroll-snap-align: start; display: grid; place-items: center; text-align: center; padding: 32px; color: var(--muted); line-height: 1.5; }
+  .center .big { font: 700 40px var(--serif); color: var(--ivory); margin-bottom: 10px; }
+  .center .big i { color: var(--gold); font-style: normal; }
+  .center button { margin-top: 18px; height: 46px; padding: 0 26px; border-radius: 23px; border: 0; background: var(--gold); color: #1A1406; font: 700 16px var(--sans); cursor: pointer; }
+
+  .sheetpanel { position: fixed; inset: 0; z-index: 10; background: var(--ink); overflow-y: auto; padding: calc(18px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom)); transform: translateY(100%); visibility: hidden; transition: transform .38s cubic-bezier(.2,.8,.2,1), visibility 0s .38s; }
+  .sheetpanel.open { transform: none; visibility: visible; transition: transform .38s cubic-bezier(.2,.8,.2,1); }
+  .sheetpanel header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .sheetpanel h1 { margin: 0; font: 700 28px var(--serif); letter-spacing: -.01em; }
+  .close { height: 38px; padding: 0 16px; border-radius: 19px; border: 1px solid rgba(255,255,255,.2); background: transparent; color: var(--ivory); font: 600 15px var(--sans); cursor: pointer; }
+
+  .item { padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,.09); }
+  .item .row { display: flex; gap: 14px; align-items: center; cursor: pointer; }
+  .item .th { width: 64px; height: 64px; flex: none; border-radius: 14px; background: #19203A center/cover; display: grid; place-items: center; font: 700 26px var(--serif); color: rgba(255,255,255,.5); }
+  .item .box { flex: 1; min-width: 0; }
+  .item .box b { display: block; font: 700 18px/1.25 var(--serif); }
+  .item .box span { display: block; margin-top: 4px; font-size: 14px; line-height: 1.4; color: var(--muted); }
+  .item .rm { border: 0; background: none; color: var(--muted); padding: 10px; cursor: pointer; font-size: 18px; }
+  .item .more { margin: 12px 0 0; font: 16.5px/1.65 var(--serif); color: #E6E2D7; white-space: pre-line; }
+  .item .more[hidden] { display: none; }
+  .empty { color: var(--muted); line-height: 1.55; }
+
+  #search { width: 100%; height: 46px; border-radius: 23px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.05); color: var(--ivory); padding: 0 18px; font: 16px var(--sans); margin-bottom: 6px; }
+  #search::placeholder { color: var(--muted); }
+  .group { margin: 22px 0 0; }
+  .group h3 { margin: 0 0 11px; font: 700 18px var(--serif); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 9px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,.2); background: transparent; color: var(--ivory); font: 500 15px var(--sans); cursor: pointer; transition: background .15s, color .15s; }
+  .chip[aria-pressed="true"] { background: var(--gold); color: #1A1406; border-color: var(--gold); font-weight: 600; }
+  .chip.hide, .group.hide { display: none; }
+  #topicsFoot { position: sticky; bottom: 0; margin: 22px -18px 0; padding: 14px 18px calc(14px + env(safe-area-inset-bottom)); background: linear-gradient(to top, var(--ink) 72%, transparent); display: flex; gap: 10px; }
+  #topicsFoot button { height: 50px; border-radius: 25px; font: 700 16px var(--sans); cursor: pointer; }
+  #applyTopics { flex: 1; border: 0; background: var(--gold); color: #1A1406; }
+  #clearTopics { padding: 0 20px; border: 1px solid rgba(255,255,255,.2); background: transparent; color: var(--ivory); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) { .btn.pop { animation: none; } .bg .pic, #hint, .sheetpanel { transition: none; } }
+</style>
+</head>
+<body>
+
+<div id="top">
+  <span class="logo">Curio<i>.</i></span>
+  <div class="right">
+    <button class="tbtn" id="themesBtn" aria-label="Choisir les thèmes">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
+      <span class="badge" id="themesCount"></span>
+    </button>
+    <button class="tbtn" id="savedBtn" aria-label="Voir mes cartes sauvegardées">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-8-4.8-9.6-10C1.3 7.4 3.6 4.5 6.8 4.5c2 0 3.5 1.1 5.2 3.1 1.7-2 3.2-3.1 5.2-3.1 3.2 0 5.5 2.9 4.4 6.5C20 16.2 12 21 12 21z"/></svg>
+      <span class="badge" id="savedCount"></span>
+    </button>
+  </div>
+  <span id="hint">Glisse vers le haut</span>
+</div>
+
+<main id="feed" aria-live="polite">
+  <div class="center" id="loader"><div><div class="big">Curio<i>.</i></div>Je cherche quelque chose à t'apprendre…</div></div>
+</main>
+
+<section class="sheetpanel" id="panel" aria-label="Sauvegardés">
+  <header><h1>Sauvegardés</h1><button class="close" id="closePanel">Fermer</button></header>
+  <div id="list"></div>
+</section>
+
+<section class="sheetpanel" id="topics" aria-label="Thèmes">
+  <header><h1>Sources et thèmes</h1><button class="close" id="closeTopics">Fermer</button></header>
+  <input id="search" type="search" placeholder="Chercher un thème ou une source…" autocomplete="off">
+  <div id="groups"></div>
+  <div id="topicsFoot">
+    <button id="clearTopics" type="button">Tout</button>
+    <button id="applyTopics" type="button">Voir les cartes</button>
+  </div>
+</section>
+
+<script>
+(function () {
+  const WIKI = 'https://fr.wikipedia.org/w/api.php';
+  const feed = document.getElementById('feed');
+  const hint = document.getElementById('hint');
+  const savedCountEl = document.getElementById('savedCount');
+  const themesCount = document.getElementById('themesCount');
+  const panel = document.getElementById('panel');
+  const topicsPanel = document.getElementById('topics');
+  const list = document.getElementById('list');
+  const HEART = '<svg viewBox="0 0 24 24"><path d="M12 21s-8-4.8-9.6-10C1.3 7.4 3.6 4.5 6.8 4.5c2 0 3.5 1.1 5.2 3.1 1.7-2 3.2-3.1 5.2-3.1 3.2 0 5.5 2.9 4.4 6.5C20 16.2 12 21 12 21z"/></svg>';
+
+  const GROUPS = [
+    ['Histoire', [
+      ['🏛️ Histoire','Histoire'],['🗿 Antiquité','Antiquité'],['🏰 Moyen Âge','Moyen Âge'],['⚔️ Guerres','Guerre'],
+      ['👑 Rois et empires','Monarchie'],['🪖 Histoire militaire','Histoire militaire'],['🚩 Révolutions','Révolution'],['🏺 Archéologie','Archéologie']]],
+    ['Sciences', [
+      ['🔬 Sciences','Science'],['⚛️ Physique','Physique'],['🧪 Chimie','Chimie'],['🧬 Biologie','Biologie'],['🧮 Mathématiques','Mathématiques'],
+      ['🔭 Astronomie','Astronomie'],['🚀 Astronautique','Astronautique'],['🧠 Neurosciences','Neurosciences'],['🌋 Géologie','Géologie'],['🦠 Microbiologie','Microbiologie']]],
+    ['Nature et animaux', [
+      ['🐾 Animaux','Animal'],['🦖 Dinosaures','Dinosaure'],['🦈 Océans et mer','Océanographie'],['🐦 Oiseaux','Oiseau'],['🌿 Plantes','Botanique'],
+      ['🌍 Environnement','Environnement'],['⛅ Météo et climat','Météorologie'],['🌋 Volcans','Volcan'],['🏔️ Montagnes','Montagne'],['🐝 Insectes','Insecte']]],
+    ['Monde et géographie', [
+      ['🗺️ Géographie','Géographie'],['🌐 Pays','Pays'],['🏙️ Villes','Ville'],['🏝️ Îles','Île'],['🌊 Fleuves et lacs','Cours d\'eau'],
+      ['🧭 Explorateurs','Explorateur'],['🛕 Monuments','Monument'],['🌏 Géopolitique','Géopolitique']]],
+    ['Corps et santé', [
+      ['🫀 Corps humain','Anatomie humaine'],['💊 Médecine','Médecine'],['🍎 Nutrition','Nutrition'],['🧘 Santé','Santé'],['😴 Sommeil','Sommeil'],
+      ['🏋️ Musculation','Musculation'],['🩺 Maladies','Maladie']]],
+    ['Sport', [
+      ['🏅 Sport','Sport'],['⚽ Football','Football'],['🏀 Basket-ball','Basket-ball'],['🥋 Arts martiaux','Art martial'],['🥊 Sports de combat','Sport de combat'],
+      ['🏃 Athlétisme','Athlétisme'],['🏊 Natation','Natation'],['🎾 Tennis','Tennis'],['🏎️ Sports mécaniques','Sport mécanique'],['🥇 Jeux olympiques','Jeux olympiques']]],
+    ['Technologie', [
+      ['💻 Informatique','Informatique'],['🌐 Internet','Internet'],['🤖 Robotique et IA','Intelligence artificielle'],['🎮 Jeux vidéo','Jeu vidéo'],
+      ['📱 Électronique','Électronique'],['⚙️ Ingénierie','Ingénierie'],['💡 Inventions','Invention'],['🔐 Cybersécurité','Sécurité informatique']]],
+    ['Transports', [
+      ['🚗 Automobile','Automobile'],['✈️ Aviation','Aéronautique'],['🚄 Trains','Transport ferroviaire'],['🚢 Navires','Navire'],['🏍️ Motos','Motocyclette']]],
+    ['Arts et culture', [
+      ['🎨 Art','Art'],['🖼️ Peinture','Peinture'],['🏛️ Architecture','Architecture'],['🎵 Musique','Musique'],['🎤 Hip-hop','Hip-hop'],['🎬 Cinéma','Cinéma'],
+      ['📺 Séries TV','Série télévisée'],['📚 Littérature','Littérature'],['💬 Bande dessinée','Bande dessinée'],['🇯🇵 Manga et anime','Manga'],
+      ['📷 Photographie','Photographie'],['💃 Danse','Danse'],['🎭 Théâtre','Théâtre'],['🎹 Instruments','Instrument de musique']]],
+    ['Idées et société', [
+      ['🧠 Philosophie','Philosophie'],['🛐 Religions','Religion'],['⚡ Mythologie','Mythologie'],['🪞 Psychologie','Psychologie'],['👥 Sociologie','Sociologie'],
+      ['🗳️ Politique','Politique'],['⚖️ Droit','Droit'],['🎓 Éducation','Éducation'],['🗣️ Langues','Langue'],['📖 Linguistique','Linguistique']]],
+    ['Argent et métiers', [
+      ['💶 Économie','Économie'],['📈 Finance','Finance'],['🏢 Entreprises','Entreprise'],['🛍️ Marketing','Marketing'],['🔨 Métiers','Métier'],['₿ Cryptomonnaies','Cryptomonnaie']]],
+    ['Cuisine et quotidien', [
+      ['🍳 Cuisine','Cuisine'],['🥖 Boulangerie','Boulangerie'],['🧁 Pâtisserie','Pâtisserie'],['🍷 Boissons','Boisson'],['🧀 Fromages','Fromage'],
+      ['👗 Mode','Mode'],['🧴 Cosmétique','Cosmétique'],['🏠 Habitat','Habitat']]],
+    ['Personnalités', [
+      ['🧑‍🔬 Scientifiques','Scientifique'],['🎖️ Chefs militaires','Militaire'],['🎙️ Chanteurs','Chanteur'],['🎥 Acteurs','Acteur'],['✍️ Écrivains','Écrivain'],
+      ['🏆 Sportifs','Sportif'],['🧑‍💼 Hommes et femmes d\'affaires','Personnalité du monde des affaires']]],
+    ['Mystères et insolite', [
+      ['🛸 Ovnis','Ovni'],['👻 Légendes','Légende'],['🕵️ Affaires criminelles','Affaire criminelle'],['🏴‍☠️ Piraterie','Piraterie'],['🧩 Énigmes','Énigme'],['🎲 Jeux','Jeu']]]
+  ];
+  const TOPICS = {};
+  GROUPS.forEach(function (g) { g[1].forEach(function (t) { TOPICS[t[0]] = t[1]; }); });
+
+  function load(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  let saved = load('curio.saved', {});
+  let selected = load('curio.topics', []).filter(function (k) { return TOPICS[k]; });
+  let selectedSources = load('curio.sources', []).filter(function (k) { return ['wikipedia', 'voyage', 'day', 'births'].indexOf(k) >= 0; });
+  const seenIds = new Set();
+  let loading = false;
+  let cardCount = 0;
+  let gen = 0;
+  const pools = {};
+  const pending = {};
+
+  function updateCount() { const n = Object.keys(saved).length; savedCountEl.textContent = n ? n : ''; }
+  function themesLabel() { const n = selected.length + selectedSources.length; themesCount.textContent = n ? n : ''; }
+  updateCount(); themesLabel();
+
+  function hashOf(str) { let h = 0; for (let i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) | 0; } return Math.abs(h); }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+  // --- sources (toutes ouvertes au public, sans compte)
+  const SOURCES = [
+    ['wikipedia', '📖 Wikipédia'],
+    ['voyage', '🧳 Wikivoyage'],
+    ['day', '📅 Ce jour dans l\'histoire'],
+    ['births', '🎂 Nés ce jour-là']
+  ];
+  const SRC_LABEL = { wikipedia: 'Wikipédia', voyage: 'Wikivoyage', day: 'Wikipédia, Ce jour dans l\'histoire', births: 'Wikipédia, Nés ce jour-là' };
+  const WEIGHT = { wikipedia: 4, voyage: 1, day: 1, births: 1 };
+  const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function strip(html) { return (new DOMParser().parseFromString(html || '', 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim(); }
+
+  function wikiItem(host, src, p) {
+    return { type: 'standard', pageid: src + ':' + p.pageid, wid: p.pageid, host: host, source: src, title: p.title,
+      description: p.description || '', extract: p.extract || '', thumbnail: p.thumbnail || null };
+  }
+
+  async function searchTopic(key) {
+    const cat = TOPICS[key];
+    const label = key.replace(/^\S+\s/, '');
+    let off = Math.floor(Math.random() * 400);
+    for (let t = 0; t < 4; t++) {
+      const q = t < 3 ? 'deepcat:"' + cat + '"' : label;
+      const url = WIKI + '?action=query&format=json&origin=*&formatversion=2' +
+        '&generator=search&gsrnamespace=0&gsrlimit=20&gsroffset=' + off + '&gsrsearch=' + encodeURIComponent(q) +
+        '&prop=extracts|pageimages|description&exintro=1&explaintext=1&exsentences=5&exlimit=max' +
+        '&piprop=thumbnail&pithumbsize=960';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const j = await res.json();
+      const pages = (j.query && j.query.pages) || [];
+      const good = pages.map(function (p) { return wikiItem('fr.wikipedia.org', 'wikipedia', p); }).filter(function (d) {
+        return d.extract.length >= 140 && !/peut (désigner|faire référence)/i.test(d.extract) && !seenIds.has(d.pageid);
+      });
+      if (good.length) {
+        const withImg = good.filter(function (d) { return d.thumbnail; });
+        return shuffle(withImg.length ? withImg : good);
+      }
+      off = Math.floor(off / 4);
+    }
+    return [];
+  }
+
+  async function nextFromPool(key, fill) {
+    const g = gen;
+    if (!pools[key] || !pools[key].length) {
+      if (!pending[key]) {
+        pending[key] = fill().then(function (arr) { if (g === gen) pools[key] = (pools[key] || []).concat(arr); }).finally(function () { delete pending[key]; });
+      }
+      await pending[key];
+    }
+    const arr = pools[key] || [];
+    while (arr.length) {
+      const d = arr.shift();
+      if (!seenIds.has(d.pageid)) { seenIds.add(d.pageid); return d; }
+    }
+    throw new Error('Source vide');
+  }
+
+  // Wikipédia et Wikivoyage : article au hasard
+  async function wikiRandom(host, src, minLen) {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const res = await fetch('https://' + host + '/api/rest_v1/page/random/summary?r=' + Math.random());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const d = await res.json();
+      if (d.type !== 'standard' || !d.extract || d.extract.length < minLen) continue;
+      const item = wikiItem(host, src, d);
+      if (seenIds.has(item.pageid)) continue;
+      if (!d.thumbnail && attempt < 7) continue;
+      seenIds.add(item.pageid);
+      return item;
+    }
+    throw new Error('Rien de bon trouvé');
+  }
+
+  // Ce jour dans l'histoire (Wikimédia)
+  async function fillDay() {
+    const now = new Date();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const res = await fetch('https://fr.wikipedia.org/api/rest_v1/feed/onthisday/events/' + mm + '/' + dd);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    const out = [];
+    (j.events || []).forEach(function (ev) {
+      const pg = (ev.pages || [])[0];
+      if (!pg || !ev.text || !pg.pageid) return;
+      const title = (pg.titles && pg.titles.normalized) || pg.title;
+      const ago = now.getFullYear() - ev.year;
+      const lead = ev.text.trim().replace(/([^.!?])$/, '$1.');
+      out.push({ type: 'standard', pageid: 'day:' + ev.year + ':' + pg.pageid, wid: pg.pageid, host: 'fr.wikipedia.org', source: 'day',
+        title: title, description: now.getDate() + ' ' + MOIS[now.getMonth()] + ' ' + ev.year + (ago > 0 ? ', il y a ' + ago + ' ans' : ''),
+        lead: lead, extract: lead + ' ' + (pg.extract || ''), thumbnail: pg.thumbnail || null });
+    });
+    const withImg = out.filter(function (d) { return d.thumbnail; });
+    return shuffle(withImg.length >= 5 ? withImg : out);
+  }
+
+  // Ils sont nés ce jour-là (Wikimédia)
+  async function fillBirths() {
+    const now = new Date();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const res = await fetch('https://fr.wikipedia.org/api/rest_v1/feed/onthisday/births/' + mm + '/' + dd);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    const out = [];
+    (j.births || []).forEach(function (ev) {
+      const pg = (ev.pages || [])[0];
+      if (!pg || !ev.text || !pg.pageid) return;
+      const title = (pg.titles && pg.titles.normalized) || pg.title;
+      const lead = ev.text.trim().replace(/([^.!?])$/, '$1.');
+      out.push({ type: 'standard', pageid: 'births:' + ev.year + ':' + pg.pageid, wid: pg.pageid, host: 'fr.wikipedia.org', source: 'births',
+        title: title, description: 'Né' + ' le ' + now.getDate() + ' ' + MOIS[now.getMonth()] + ' ' + ev.year,
+        lead: lead, extract: lead + ' ' + (pg.extract || ''), thumbnail: pg.thumbnail || null });
+    });
+    const withImg = out.filter(function (d) { return d.thumbnail; });
+    return shuffle(withImg.length >= 5 ? withImg : out);
+  }
+
+  function pickSource() {
+    if (selected.length) return 'wikipedia';
+    const ids = selectedSources.length ? selectedSources : SOURCES.map(function (x) { return x[0]; });
+    let total = 0;
+    ids.forEach(function (id) { total += WEIGHT[id]; });
+    let r = Math.random() * total;
+    for (let i = 0; i < ids.length; i++) { r -= WEIGHT[ids[i]]; if (r <= 0) return ids[i]; }
+    return ids[0];
+  }
+
+  async function fetchFrom(src) {
+    if (src === 'wikipedia') {
+      return wikiRandom('fr.wikipedia.org', 'wikipedia', 140);
+    }
+    if (src === 'voyage') return wikiRandom('fr.wikivoyage.org', 'voyage', 120);
+    if (src === 'day') return nextFromPool('day', fillDay);
+    return nextFromPool('births', fillBirths);
+  }
+
+  async function fetchNext() {
+    let last = null;
+    for (let i = 0; i < 5; i++) {
+      const src = pickSource();
+      try {
+        if (src === 'wikipedia' && selected.length) {
+          const key = pick(selected);
+          return await nextFromPool('topic:' + key, function () { return searchTopic(key); });
+        }
+        return await fetchFrom(src);
+      } catch (e) { last = e; }
+    }
+    throw last || new Error('Rien trouvé');
+  }
+
+  // --- texte : l'essentiel d'abord, le détail à la demande
+  function gist(extract) {
+    const sentences = extract.replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+(\s|$)/g) || [extract];
+    let out = sentences[0].trim();
+    if (out.length < 90 && sentences[1]) out += ' ' + sentences[1].trim();
+    if (out.length > 220) out = out.slice(0, 217).replace(/\s+\S*$/, '') + '…';
+    return out;
+  }
+
+  const longCache = {};
+  async function fetchLong(d) {
+    if (longCache[d.pageid]) return longCache[d.pageid];
+    let base = d.longText || '';
+    let wid = d.wid, host = d.host;
+    if (!wid && typeof d.pageid === 'number') { wid = d.pageid; host = 'fr.wikipedia.org'; }
+    if (!base && wid && host) {
+      try {
+        const r = await fetch('https://' + host + '/w/api.php?action=query&format=json&origin=*&formatversion=2&prop=extracts&exintro=1&explaintext=1&pageids=' + wid);
+        const j = await r.json();
+        const t = j.query && j.query.pages && j.query.pages[0] && j.query.pages[0].extract;
+        if (t) base = t.trim();
+      } catch (e) {}
+    }
+    if (!base) base = d.extract || '';
+    const out = (d.lead ? d.lead.trim() + '\n\n' : '') + base;
+    longCache[d.pageid] = out;
+    return out;
+  }
+
+  // --- images : plusieurs tailles essayées, la première qui charge gagne
+  function imageUrls(d) {
+    if (d.images) return d.images;
+    if (!d.thumbnail || !d.thumbnail.source) return [];
+    const t = d.thumbnail.source;
+    if (!/\/\d+px-/.test(t)) return [t];
+    return [t.replace(/\/\d+px-/, '/960px-'), t.replace(/\/\d+px-/, '/500px-'), t];
+  }
+  function applyImage(pic, urls) {
+    (function tryNext(i) {
+      if (i >= urls.length) return;
+      const im = new Image();
+      im.referrerPolicy = 'no-referrer';
+      im.onload = function () { pic.style.backgroundImage = 'url("' + urls[i] + '")'; pic.classList.add('on'); };
+      im.onerror = function () { tryNext(i + 1); };
+      im.src = urls[i];
+    })(0);
+  }
+
+  function makeCard(d) {
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.dataset.idx = cardCount++;
+
+    const bg = document.createElement('div');
+    bg.className = 'bg';
+    const hue = hashOf(String(d.pageid)) % 360;
+    bg.style.background = 'linear-gradient(160deg, hsl(' + hue + ' 42% 26%), hsl(' + ((hue + 50) % 360) + ' 46% 10%))';
+    const letter = document.createElement('span');
+    letter.className = 'letter';
+    letter.textContent = (d.title || '?').charAt(0).toUpperCase();
+    const pic = document.createElement('div');
+    pic.className = 'pic';
+    bg.append(letter, pic);
+    applyImage(pic, imageUrls(d));
+
+    const shade = document.createElement('div');
+    shade.className = 'shade';
+
+    const content = document.createElement('div');
+    content.className = 'content';
+    const h2 = document.createElement('h2');
+    h2.textContent = d.title;
+    content.appendChild(h2);
+    if (d.description) {
+      const desc = document.createElement('p');
+      desc.className = 'desc';
+      desc.textContent = d.description.charAt(0).toUpperCase() + d.description.slice(1);
+      content.appendChild(desc);
+    }
+    const text = document.createElement('p');
+    text.className = 'text';
+    text.textContent = gist(d.extract);
+    content.appendChild(text);
+    const srcLine = document.createElement('p');
+    srcLine.className = 'src';
+    srcLine.textContent = 'Source : ' + (SRC_LABEL[d.source] || 'Wikipédia');
+    content.appendChild(srcLine);
+
+    const lg = document.createElement('p');
+    lg.className = 'long';
+    lg.hidden = true;
+    const mb = document.createElement('button');
+    mb.type = 'button';
+    mb.className = 'morebtn';
+    mb.textContent = 'Lire plus';
+    let loadedLong = false;
+    mb.addEventListener('click', async function () {
+      const open = lg.hidden;
+      if (open) {
+        lg.hidden = false;
+        content.classList.add('reading');
+        card.classList.add('reading');
+        mb.textContent = 'Réduire';
+        if (!loadedLong) {
+          lg.textContent = 'Chargement…';
+          lg.textContent = await fetchLong(d);
+          loadedLong = true;
+        }
+      } else {
+        lg.hidden = true;
+        content.classList.remove('reading');
+        card.classList.remove('reading');
+        content.scrollTop = 0;
+        mb.textContent = 'Lire plus';
+      }
+    });
+    content.append(mb, lg);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const heart = document.createElement('button');
+    heart.className = 'btn' + (saved[d.pageid] ? ' on' : '');
+    heart.dataset.pid = d.pageid;
+    heart.setAttribute('aria-label', 'Sauvegarder');
+    heart.innerHTML = HEART;
+    heart.addEventListener('click', function () {
+      if (saved[d.pageid]) {
+        delete saved[d.pageid];
+        heart.classList.remove('on');
+      } else {
+        saved[d.pageid] = { pageid: d.pageid, wid: d.wid || null, host: d.host || null, source: d.source, lead: d.lead || null, longText: d.longText || null, title: d.title, gist: gist(d.extract), extract: d.extract, thumb: imageUrls(d).slice(-1)[0] || null };
+        heart.classList.add('on');
+        heart.classList.remove('pop'); void heart.offsetWidth; heart.classList.add('pop');
+      }
+      store('curio.saved', saved);
+      updateCount();
+    });
+    actions.appendChild(heart);
+
+    card.append(bg, shade, content, actions);
+    return card;
+  }
+
+  function showError() {
+    const old = document.getElementById('err');
+    if (old) old.remove();
+    const e = document.createElement('div');
+    e.className = 'center';
+    e.id = 'err';
+    e.innerHTML = '<div>Impossible de charger les cartes.<br>Vérifie ta connexion.<br><button type="button">Réessayer</button></div>';
+    e.querySelector('button').addEventListener('click', function () { e.remove(); loadMore(3); });
+    feed.appendChild(e);
+    e.scrollIntoView();
+  }
+
+  async function loadMore(n) {
+    if (loading) return;
+    loading = true;
+    const g = gen;
+    try {
+      const results = await Promise.allSettled(Array.from({ length: n }, fetchNext));
+      if (g !== gen) return;
+      let ok = 0;
+      for (const r of results) {
+        if (r.status === 'fulfilled') {
+          const card = makeCard(r.value);
+          feed.appendChild(card);
+          observer.observe(card);
+          ok++;
+        }
+      }
+      const l = document.getElementById('loader');
+      if (l) l.remove();
+      if (!ok) showError();
+    } catch (e) {
+      showError();
+    } finally {
+      if (g === gen) loading = false;
+    }
+  }
+
+  const observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      const idx = +en.target.dataset.idx;
+      if (idx >= 1) hint.classList.add('gone');
+      if (idx >= cardCount - 3) loadMore(3);
+    });
+  }, { root: feed, threshold: 0.6 });
+
+  // --- sauvegardés (tout se lit dans l'appli)
+  function renderSaved() {
+    list.textContent = '';
+    const keys = Object.keys(saved);
+    if (!keys.length) {
+      const p = document.createElement('p');
+      p.className = 'empty';
+      p.textContent = "Rien ici pour l'instant. Touche le cœur sur une carte pour la garder.";
+      list.appendChild(p);
+      return;
+    }
+    keys.reverse().forEach(function (k) {
+      const s = saved[k];
+      const item = document.createElement('div');
+      item.className = 'item';
+      const row = document.createElement('div');
+      row.className = 'row';
+      const th = document.createElement('div');
+      th.className = 'th';
+      if (s.thumb) th.style.backgroundImage = 'url("' + s.thumb + '")'; else th.textContent = (s.title || '?').charAt(0).toUpperCase();
+      const box = document.createElement('div');
+      box.className = 'box';
+      const b = document.createElement('b');
+      b.textContent = s.title;
+      const sp = document.createElement('span');
+      sp.textContent = s.gist || '';
+      box.append(b, sp);
+      const rm = document.createElement('button');
+      rm.className = 'rm';
+      rm.setAttribute('aria-label', 'Retirer');
+      rm.textContent = '✕';
+      rm.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        delete saved[k];
+        store('curio.saved', saved);
+        updateCount();
+        renderSaved();
+        document.querySelectorAll('.btn[data-pid]').forEach(function (x) { x.classList.toggle('on', !!saved[x.dataset.pid]); });
+      });
+      row.append(th, box, rm);
+      const more = document.createElement('p');
+      more.className = 'more';
+      more.hidden = true;
+      let filled = false;
+      row.addEventListener('click', async function () {
+        more.hidden = !more.hidden;
+        if (!more.hidden && !filled) {
+          more.textContent = 'Chargement…';
+          more.textContent = await fetchLong(s);
+          filled = true;
+        }
+      });
+      item.append(row, more);
+      list.appendChild(item);
+    });
+  }
+  document.getElementById('savedBtn').addEventListener('click', function () { renderSaved(); panel.classList.add('open'); });
+  document.getElementById('closePanel').addEventListener('click', function () { panel.classList.remove('open'); });
+
+  // --- thèmes
+  const groupsEl = document.getElementById('groups');
+  const searchEl = document.getElementById('search');
+  let draft = selected.slice();
+  let draftSources = selectedSources.slice();
+
+  function updateFoot() {
+    const n = draft.length + draftSources.length;
+    document.getElementById('applyTopics').textContent = n ? 'Voir les cartes (' + n + ')' : 'Voir les cartes (tout)';
+  }
+
+  function buildGroups() {
+    groupsEl.textContent = '';
+    const sbox = document.createElement('div');
+    sbox.className = 'group';
+    const sh = document.createElement('h3');
+    sh.textContent = 'Sources';
+    const note = document.createElement('p');
+    note.className = 'note';
+    note.textContent = "Toutes les sources sont en français. Si tu choisis des thèmes plus bas, seule Wikipédia est utilisée.";
+    const schips = document.createElement('div');
+    schips.className = 'chips';
+    SOURCES.forEach(function (t) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = t[1];
+      b.setAttribute('aria-pressed', draftSources.indexOf(t[0]) >= 0 ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        const i = draftSources.indexOf(t[0]);
+        if (i >= 0) draftSources.splice(i, 1); else draftSources.push(t[0]);
+        b.setAttribute('aria-pressed', i >= 0 ? 'false' : 'true');
+        updateFoot();
+      });
+      schips.appendChild(b);
+    });
+    sbox.append(sh, note, schips);
+    groupsEl.appendChild(sbox);
+    GROUPS.forEach(function (g) {
+      const box = document.createElement('div');
+      box.className = 'group';
+      const h = document.createElement('h3');
+      h.textContent = g[0];
+      const chips = document.createElement('div');
+      chips.className = 'chips';
+      g[1].forEach(function (t) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.textContent = t[0];
+        b.setAttribute('aria-pressed', draft.indexOf(t[0]) >= 0 ? 'true' : 'false');
+        b.addEventListener('click', function () {
+          const i = draft.indexOf(t[0]);
+          if (i >= 0) draft.splice(i, 1); else draft.push(t[0]);
+          b.setAttribute('aria-pressed', i >= 0 ? 'false' : 'true');
+          updateFoot();
+        });
+        chips.appendChild(b);
+      });
+      box.append(h, chips);
+      groupsEl.appendChild(box);
+    });
+  }
+
+  searchEl.addEventListener('input', function () {
+    const q = searchEl.value.trim().toLowerCase();
+    groupsEl.querySelectorAll('.group').forEach(function (box) {
+      let any = false;
+      box.querySelectorAll('.chip').forEach(function (c) {
+        const hit = !q || c.textContent.toLowerCase().indexOf(q) >= 0;
+        c.classList.toggle('hide', !hit);
+        if (hit) any = true;
+      });
+      box.classList.toggle('hide', !any);
+    });
+  });
+
+  document.getElementById('themesBtn').addEventListener('click', function () {
+    draft = selected.slice();
+    draftSources = selectedSources.slice();
+    searchEl.value = '';
+    buildGroups();
+    updateFoot();
+    topicsPanel.classList.add('open');
+  });
+  document.getElementById('closeTopics').addEventListener('click', function () { topicsPanel.classList.remove('open'); });
+  document.getElementById('clearTopics').addEventListener('click', function () {
+    draft = [];
+    draftSources = [];
+    groupsEl.querySelectorAll('.chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+    updateFoot();
+  });
+  document.getElementById('applyTopics').addEventListener('click', function () {
+    const changed = draft.slice().sort().join('|') !== selected.slice().sort().join('|') ||
+      draftSources.slice().sort().join('|') !== selectedSources.slice().sort().join('|');
+    topicsPanel.classList.remove('open');
+    if (!changed) return;
+    selected = draft.slice();
+    selectedSources = draftSources.slice();
+    store('curio.topics', selected);
+    store('curio.sources', selectedSources);
+    themesLabel();
+    gen++;
+    loading = false;
+    observer.disconnect();
+    feed.textContent = '';
+    cardCount = 0;
+    Object.keys(pools).forEach(function (k) { delete pools[k]; });
+    const l = document.createElement('div');
+    l.className = 'center';
+    l.id = 'loader';
+    l.innerHTML = '<div><div class="big">Curio<i>.</i></div>Je cherche quelque chose à t\'apprendre…</div>';
+    feed.appendChild(l);
+    hint.classList.remove('gone');
+    loadMore(4);
+  });
+
+  loadMore(4);
+})();
+</script>
+</body>
+</html>
