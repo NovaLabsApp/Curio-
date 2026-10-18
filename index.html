@@ -264,6 +264,29 @@
   .medal .me { font-size: 34px; }
   .medal b { display: block; margin-top: 6px; font: 700 15px/1.25 var(--serif); }
   .medal span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.35; color: var(--muted); }
+  .bgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .bcard { padding: 14px 10px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); }
+  .bcard .bring { opacity: .45; filter: grayscale(.6); }
+  .bcard.on { border-color: rgba(212,175,106,.45); background: rgba(212,175,106,.07); }
+  .bcard.on .bring { opacity: 1; filter: none; }
+  .bring { width: 64px; height: 64px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center; font-size: 32px; border: 3px solid rgba(255,255,255,.2); background: rgba(11,15,26,.6); box-shadow: 0 0 18px rgba(0,0,0,.35) inset; }
+  .bring.big { width: 72px; height: 72px; margin: 0; flex: none; font-size: 36px; opacity: 1; filter: none; }
+  .bcard b { display: block; font: 700 15px/1.25 var(--serif); }
+  .bcard span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.35; color: var(--muted); }
+  .tiers { display: flex; justify-content: center; gap: 6px; margin-top: 6px; font-size: 17px; }
+  .tiers span { opacity: .25; filter: grayscale(1); margin: 0; font-size: 17px; color: inherit; }
+  .tiers span.on { opacity: 1; filter: none; }
+  .who .tiers { justify-content: flex-start; }
+  .pform textarea.notes { min-height: 120px; font-size: 16px; line-height: 1.5; }
+  .noterow { display: block; width: 100%; margin: 0 0 8px; padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: var(--ivory); text-align: left; cursor: pointer; font-family: var(--sans); }
+  .noterow b { display: block; font: 700 15px/1.25 var(--serif); }
+  .noterow span { display: block; margin-top: 3px; font-size: 13.5px; line-height: 1.4; color: var(--muted); }
+  .tl { position: relative; margin: 8px 0 0 8px; padding-left: 24px; border-left: 2px solid rgba(212,175,106,.45); }
+  .tli { display: block; position: relative; width: 100%; padding: 0 0 22px; border: 0; background: none; color: var(--ivory); text-align: left; cursor: pointer; font-family: var(--sans); }
+  .tdot { position: absolute; left: -33px; top: 7px; width: 14px; height: 14px; border-radius: 50%; background: var(--gold); border: 3px solid var(--ink); box-shadow: 0 0 0 2px rgba(212,175,106,.5); }
+  .tbox b { display: block; font: 700 22px/1.1 var(--serif); color: var(--gold); }
+  .tbox p { margin: 5px 0 0; font: 16px/1.55 var(--serif); color: #E6E2D7; }
+  .tbox .tls { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
   @media (prefers-reduced-motion: reduce) { #levelup.show .lu-card { animation: none; } .btn.pop { animation: none; } .bg .blur, .frame, #hint, .sheetpanel { transition: none; } }
 </style>
 </head>
@@ -624,9 +647,16 @@
       .replace(/[ \t]{2,}/g, ' ').trim();
   }
   function splitSentences(text) {
-    const guarded = text.replace(/\b(J\.-C|av|apr|env|St|Ste|Mme|Mlle|Dr|Mgr|MM|vs|cf|éd|dir|M)\./g, '$1\u0001');
-    const parts = guarded.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [guarded];
-    return parts.map(function (x) { return x.replace(/\u0001/g, '.').trim(); }).filter(Boolean);
+    const guarded = text
+      .replace(/\bJ\.-C\./g, 'J\u0001-C\u0001')
+      .replace(/\b(av|apr|env|St|Ste|Mme|Mlle|Dr|Mgr|MM|vs|cf|éd|dir|M|etc)\./g, '$1\u0001')
+      .replace(/\b([A-ZÀ-Ý])\./g, '$1\u0001');
+    const out = [];
+    const re = /[.!?]+["»”)]?\s+(?=[A-ZÀ-ÝŒ«"“(\d])/g;
+    let last = 0, m;
+    while ((m = re.exec(guarded))) { out.push(guarded.slice(last, m.index + m[0].length)); last = re.lastIndex; }
+    out.push(guarded.slice(last));
+    return out.map(function (x) { return x.replace(/\u0001/g, '.').trim(); }).filter(Boolean);
   }
   function gist(extract) {
     const sentences = splitSentences(cleanText(extract).replace(/\s+/g, ' '));
@@ -795,9 +825,11 @@
     heart.addEventListener('click', function () {
       if (saved[d.pageid]) {
         delete saved[d.pageid];
+        deckRemove(d.pageid);
         heart.classList.remove('on');
       } else {
         saved[d.pageid] = { pageid: d.pageid, wid: d.wid || null, host: d.host || null, source: d.source, lead: d.lead || null, longText: d.longText || null, title: d.title, gist: gist(d.extract), extract: d.extract, thumb: imageUrls(d).slice(-1)[0] || null };
+        deckAdd(saved[d.pageid]);
         heart.classList.add('on');
         heart.classList.remove('pop'); void heart.offsetWidth; heart.classList.add('pop');
       }
@@ -892,6 +924,7 @@
       rm.addEventListener('click', function (ev) {
         ev.stopPropagation();
         delete saved[k];
+        deckRemove(k);
         store('curio.saved', saved);
         updateCount();
         renderSaved();
@@ -1200,7 +1233,7 @@
   }
 
   function checkBadges() {
-    const c = { best: streakInfo().best, saved: Object.keys(saved).length };
+    const c = { best: streakInfo().best, saved: Object.keys(saved).length, dom: (typeof domainCounts === 'function') ? domainCounts() : {}, mastered: (typeof study !== 'undefined') && study.badges.some(function (b) { return !!b.diamant; }) };
     BADGES.forEach(function (b) {
       if (!profile.badges[b[0]] && b[4](profile, c)) {
         profile.badges[b[0]] = dayKey(new Date());
@@ -1499,6 +1532,15 @@
     bd.appendChild(bg);
     body.appendChild(bd);
 
+    if (typeof study !== 'undefined' && study.badges.length) {
+      const cb = el('div', 'pcard');
+      cb.appendChild(el('h3', null, 'Badges de cours · ' + study.badges.length));
+      const g = el('div', 'bgrid2');
+      study.badges.forEach(function (b) { g.appendChild(badgeCard(null, b)); });
+      cb.appendChild(g);
+      body.appendChild(cb);
+    }
+
     body.appendChild(rankBlock('Tes sources', 'Pas encore de cartes vues.', topList(profile.bySource, 5), function (k) { return SRC_SHORT[k] || k; }));
     body.appendChild(rankBlock('Tes thèmes préférés', 'Choisis des thèmes pour les voir apparaître ici.', topList(profile.byTopic, 6)));
     body.appendChild(rankBlock('Pays explorés · ' + Object.keys(profile.byCountry).length, 'Choisis un pays dans le menu pour l\'explorer.', topList(profile.byCountry, 8)));
@@ -1572,10 +1614,35 @@
   const YEAR_RE_G = /\b(?:en|En|depuis|vers|jusqu'en|jusqu’en|avant|après|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|an)\s+(1[0-9]{3}|20[0-2][0-9]|[3-9][0-9]{2})\b/g;
   const TERM_RE = /[A-ZÀ-ÝŒ][\p{L}'’-]+(?:\s+(?:(?:de la|du|des|de)\s+|d['’])?[A-ZÀ-ÝŒ][\p{L}'’-]+){0,3}(?:\s+[IVX]{1,5}\b)?/gu;
 
+  // ---- badges liés aux cours : emblème selon le sujet, médailles par niveau ----
+  const DOMAINS = {
+    histoire: { label: 'Histoire', emoji: '🏛️', title: 'Historien', re: /histoire|guerre|révolution|empire|royaume|\broi\b|reine|antique|antiquité|moyen âge|médiéval|siècle|napoléon|\brome\b|romain|égypte|grèce|viking|croisade|renaissance|colonis|bataille|dynastie|civilisation/i },
+    corps: { label: 'Corps et santé', emoji: '🫀', title: 'Santé', re: /\bcorps\b|médecine|santé|nerveux|immunitaire|cerveau|sommeil|nutrition|maladie|organe|anatomie|\bcœur\b/i },
+    tech: { label: 'Technologie', emoji: '💻', title: 'Technophile', re: /technolog|informatique|internet|intelligence artificielle|robot|ordinateur|cyber|astronautique|logiciel|numérique|électronique/i },
+    sciences: { label: 'Sciences', emoji: '🔬', title: 'Scientifique', re: /science|physique|chimie|biolog|cellule|génétique|astronom|système solaire|évolution|relativité|électricité|atome|molécul|tectonique|géologie|mathémat|énergie|espèce/i },
+    monde: { label: 'Monde et société', emoji: '🌍', title: 'Citoyen du monde', re: /géograph|\bpays\b|union européenne|géopolitique|mondialisation|démocratie|économie|politique|\bdroit\b|société|climat|environnement|\bville\b|continent/i },
+    arts: { label: 'Arts et idées', emoji: '🎨', title: 'Artiste', re: /\bart\b|peinture|impressionnisme|musique|cinéma|littérature|architecture|philosophie|mythologie|religion|psychologie|théâtre|poésie|roman/i }
+  };
+  const EMBLEMS = [
+    [/napoléon|louis xiv|monarchie|royaume|\broi\b|dynastie/i, '👑'], [/révolution/i, '🚩'], [/rome|romain/i, '🏛️'], [/égypte/i, '🔺'], [/grèce|grec/i, '🏺'],
+    [/viking/i, '⛵'], [/moyen âge|médiéval|château/i, '🏰'], [/croisade/i, '⚔️'], [/guerre froide/i, '☢️'], [/guerre/i, '🪖'], [/renaissance/i, '🖼️'], [/colonis/i, '🚢'],
+    [/système solaire|planète/i, '🪐'], [/astronautique|spatial/i, '🚀'], [/astronom/i, '🔭'], [/cellule|génétique|\badn\b/i, '🧬'], [/évolution/i, '🦎'], [/relativité|physique/i, '⚛️'],
+    [/électricité/i, '⚡'], [/chimie/i, '🧪'], [/tectonique|volcan/i, '🌋'], [/climat/i, '🌡️'], [/sommeil/i, '😴'], [/nerveux|cerveau|neuro/i, '🧠'], [/immunitaire/i, '🛡️'],
+    [/nutrition/i, '🍎'], [/intelligence artificielle|robot/i, '🤖'], [/internet/i, '🌐'], [/cyber/i, '🔐'], [/union européenne/i, '🇪🇺'], [/démocratie|politique/i, '🗳️'],
+    [/économie/i, '💶'], [/\bdroit\b/i, '⚖️'], [/géopolitique/i, '🧭'], [/mondialisation/i, '🌍'], [/impressionnisme|peinture/i, '🎨'], [/musique/i, '🎵'], [/cinéma/i, '🎬'],
+    [/littérature/i, '📖'], [/architecture/i, '🏗️'], [/philosophie/i, '💭'], [/mythologie/i, '⚡'], [/religion/i, '🛐'], [/psychologie/i, '🪞']
+  ];
+  const TIERS = [['bronze', '🥉', 'Cours terminé', '#CD7F32'], ['or', '🏅', 'Examen réussi', '#D4AF6A'], ['diamant', '💎', 'Maîtrise', '#7AB8FF']];
+  function domainFor(text) { const ks = Object.keys(DOMAINS); for (let i = 0; i < ks.length; i++) { if (DOMAINS[ks[i]].re.test(text)) return ks[i]; } return 'general'; }
+  function emblemFor(text, domain) { for (let i = 0; i < EMBLEMS.length; i++) { if (EMBLEMS[i][0].test(text)) return EMBLEMS[i][1]; } return domain && DOMAINS[domain] ? DOMAINS[domain].emoji : '📚'; }
+
   let study = load('curio.study', null) || {};
   if (!Array.isArray(study.courses)) study.courses = [];
   if (!study.remind) study.remind = '19:00';
   if (!Array.isArray(study.ach)) study.ach = [];
+  if (!Array.isArray(study.badges)) study.badges = [];
+  if (!Array.isArray(study.deck)) study.deck = [];
+  const DECK = { id: 'deck', title: 'Mes cartes sauvegardées' };
   if (!study.stats || !study.stats.days) study.stats = { days: {} };
   function saveStudy() { try { localStorage.setItem('curio.study', JSON.stringify(study)); return true; } catch (e) { toast('Stockage plein : supprime un cours'); return false; } }
   function todayKey() { return dayKey(new Date()); }
@@ -1592,9 +1659,18 @@
     if (c.exam === undefined) c.exam = null;
     if (c.diploma === undefined) c.diploma = '';
     if (!c.completed) c.completed = '';
+    if (c.mastered === undefined) c.mastered = '';
+    if (!c.domain) c.domain = domainFor(c.title + ' ' + (c.desc || ''));
+    if (!c.emblem) c.emblem = emblemFor(c.title + ' ' + (c.desc || ''), c.domain);
     return c;
   }
   study.courses.forEach(ensureModel);
+  study.ach.forEach(function (a) {
+    let b = study.badges.find(function (x) { return x.cid === a.cid; });
+    if (!b) { const d = domainFor(a.title); b = { cid: a.cid, title: a.title, emblem: emblemFor(a.title, d), domain: d, bronze: '', or: '', diamant: '', score: null, chap: 0, chapTotal: 0 }; study.badges.push(b); }
+    if (a.tier === 'diplome') { b.or = b.or || a.date; if (a.score != null) b.score = a.score; if (!b.bronze) b.bronze = a.date; } else b.bronze = b.bronze || a.date;
+  });
+  study.ach = [];
 
   // ---- fabrication d'un cours à partir d'un article complet ----
   function parseSections(text) {
@@ -1772,6 +1848,7 @@
   }
   function newCourse(art) {
     const c = { id: 'c' + Date.now().toString(36), title: art.title, desc: art.desc || '', thumb: art.thumb || '', created: todayKey(), modules: [], lessons: [], cards: [], tests: {}, exam: null, diploma: '', completed: '', articles: [art.title] };
+    ensureModel(c);
     if (!addArticleToCourse(c, art)) return null;
     return c;
   }
@@ -1804,6 +1881,7 @@
     const t = todayKey();
     const out = [];
     study.courses.forEach(function (c) { c.cards.forEach(function (cd) { if (cd.on && cd.due <= t) out.push({ c: c, card: cd }); }); });
+    study.deck.forEach(function (cd) { if (cd.on && cd.due <= t) out.push({ c: DECK, card: cd }); });
     return out;
   }
   function mastery(c) {
@@ -1817,11 +1895,12 @@
   function modDone(c, mi) { return modLessons(c, mi).every(function (i) { return c.lessons[i].done; }); }
   function updateStudyBadge() { const n = dueCards().length; document.getElementById('studyBadge').textContent = n ? (n > 99 ? '99+' : String(n)) : ''; }
   function nextDueText() {
-    if (!study.courses.length) return 'Crée ton premier cours pour commencer.';
+    if (!study.courses.length && !study.deck.length) return 'Crée ton premier cours pour commencer.';
     const t = todayKey();
     const future = [];
     study.courses.forEach(function (c) { c.cards.forEach(function (cd) { if (cd.on && cd.due > t) future.push(cd.due); }); });
-    if (!future.length) return 'Termine une leçon pour lancer tes révisions.';
+    study.deck.forEach(function (cd) { if (cd.on && cd.due > t) future.push(cd.due); });
+    if (!future.length) return 'Termine une leçon ou sauvegarde une carte pour lancer tes révisions.';
     future.sort();
     const nxt = future[0];
     const n = future.filter(function (d) { return d === nxt; }).length;
@@ -1834,9 +1913,51 @@
     d[0]++; if (ok) d[1]++;
     study.stats.days[k] = d;
   }
-  function addAchievement(c, tier, score) {
-    if (study.ach.some(function (a) { return a.cid === c.id && a.tier === tier; })) return;
-    study.ach.push({ cid: c.id, title: c.title, tier: tier, date: todayKey(), score: score == null ? null : score });
+  function badgeEntry(c) {
+    let b = study.badges.find(function (x) { return x.cid === c.id; });
+    if (!b) { b = { cid: c.id, title: c.title, emblem: c.emblem, domain: c.domain, bronze: '', or: '', diamant: '', score: null, chap: 0, chapTotal: 0 }; study.badges.push(b); }
+    return b;
+  }
+  function chapOk(c) { return c.modules.filter(function (m, mi) { return c.tests[mi] != null && c.tests[mi] >= PASS_TEST; }).length; }
+  function syncBadge(c) { const b = study.badges.find(function (x) { return x.cid === c.id; }); if (b) { b.chap = chapOk(c); b.chapTotal = c.modules.length; b.emblem = c.emblem; } return b; }
+  function awardTier(c, tier, score) {
+    const b = badgeEntry(c);
+    if (b[tier]) return false;
+    b[tier] = todayKey();
+    if (tier === 'or' && score != null) b.score = score;
+    syncBadge(c);
+    const t = TIERS.filter(function (x) { return x[0] === tier; })[0];
+    celebrate(c.emblem + ' ' + t[1], c.title, t[2] + (tier === 'or' && score != null ? ' · ' + score + ' %' : '') + ' : badge ajouté à ta collection', t[3]);
+    return true;
+  }
+  function checkMastery(c) {
+    if (c.diploma && !c.mastered && mastery(c) >= 80) { c.mastered = todayKey(); awardTier(c, 'diamant', null); studyCredit(30, 0); return true; }
+    return false;
+  }
+  function domainCounts() {
+    const out = {};
+    study.badges.forEach(function (b) { if (b.bronze && b.domain) out[b.domain] = (out[b.domain] || 0) + 1; });
+    return out;
+  }
+  function tierRow(b) {
+    const row = el('div', 'tiers');
+    TIERS.forEach(function (t) { const x = el('span', b && b[t[0]] ? 'on' : '', t[1]); x.title = t[2]; row.appendChild(x); });
+    return row;
+  }
+  function topTierColor(b) { let col = 'rgba(255,255,255,.2)'; TIERS.forEach(function (t) { if (b && b[t[0]]) col = t[3]; }); return col; }
+  function badgeCard(c, b) {
+    const card = el('div', 'bcard' + (b && (b.bronze || b.or || b.diamant) ? ' on' : ''));
+    const ring = el('div', 'bring', (b && b.emblem) || (c && c.emblem) || '📚');
+    ring.style.borderColor = topTierColor(b);
+    card.appendChild(ring);
+    card.appendChild(el('b', null, (b && b.title) || c.title));
+    card.appendChild(tierRow(b));
+    let meta = '';
+    if (c) meta = lessonsDone(c) + '/' + c.lessons.length + ' leçons' + (c.modules.length > 1 ? ' · chapitres ' + chapOk(c) + '/' + c.modules.length : '');
+    else if (b) meta = 'chapitres ' + b.chap + '/' + b.chapTotal;
+    if (b && b.or && b.score != null) meta += ' · examen ' + b.score + ' %';
+    card.appendChild(el('span', null, meta));
+    return card;
   }
 
   function studyCredit(xp, count) {
@@ -1861,8 +1982,101 @@
     ['st2', '🥉', 'Cours terminé', 'Terminer toutes les leçons d\'un cours', function (p) { return (p.courses || 0) >= 1; }],
     ['st3', '🏅', 'Diplômé', 'Réussir l\'examen final d\'un cours', function (p) { return (p.diplomas || 0) >= 1; }],
     ['st4', '🏛️', 'Étudiant assidu', 'Terminer 3 cours', function (p) { return (p.courses || 0) >= 3; }],
-    ['rv50', '🧠', 'Mémoire d\'éléphant', 'Répondre à 50 questions d\'étude', function (p) { return (p.studied || 0) >= 50; }]
+    ['rv50', '🧠', 'Mémoire d\'éléphant', 'Répondre à 50 questions d\'étude', function (p) { return (p.studied || 0) >= 50; }],
+    ['dm', '💎', 'Maître d\'un sujet', 'Atteindre la maîtrise (80 %) d\'un cours', function (p, c) { return !!(c.mastered); }]
   );
+  Object.keys(DOMAINS).forEach(function (k) {
+    const d = DOMAINS[k];
+    BADGES.push(['dom_' + k, d.emoji, d.title, 'Terminer 2 cours de ' + d.label.toLowerCase(), function (p, c) { return (c.dom && c.dom[k] || 0) >= 2; }]);
+  });
+
+  // ---- cartes sauvegardées : elles entrent aussi dans les révisions espacées ----
+  function deckPush(sv0) {
+    if (!sv0 || study.deck.length >= 200) return false;
+    const id = 's:' + sv0.pageid;
+    if (study.deck.some(function (x) { return x.id === id; })) return false;
+    let a = sv0.gist || gist(sv0.extract || '');
+    if (!a) return false;
+    if (a.length > 360) a = a.slice(0, 357).replace(/\s+\S*$/, '') + '…';
+    study.deck.push({ id: id, type: 'recall', role: 'lesson', q: 'Que retiens-tu de « ' + sv0.title + ' » ?', a: a, box: 0, due: todayKey(), reps: 0, lapses: 0, on: true });
+    return true;
+  }
+  function deckAdd(sv0) {
+    if (!deckPush(sv0)) return;
+    saveStudy(); updateStudyBadge();
+    if (!study.deckHint) { study.deckHint = 1; saveStudy(); toast('📌 Cette carte rejoint tes révisions espacées'); }
+  }
+  function deckRemove(pageid) {
+    const id = 's:' + pageid, n = study.deck.length;
+    study.deck = study.deck.filter(function (x) { return x.id !== id; });
+    if (study.deck.length !== n) { saveStudy(); updateStudyBadge(); }
+  }
+  function syncDeckFromSaved() {
+    let n = 0;
+    Object.keys(saved).forEach(function (k) { if (deckPush(saved[k])) n++; });
+    if (n) { study.deckHint = 1; saveStudy(); }
+  }
+
+  // ---- frise chronologique ----
+  function timelineEvents(c, mi) {
+    const out = [];
+    const seen = new Set();
+    c.lessons.forEach(function (l, li) {
+      if (mi >= 0 && l.mod !== mi) return;
+      let n = 0;
+      splitSentences(l.text.replace(/\s*\n+\s*/g, ' ')).forEach(function (s) {
+        if (n >= 8 || s.length < 40 || s.length > 280 || seen.has(s)) return;
+        const m = YEAR_RE.exec(s);
+        if (!m) return;
+        seen.add(s);
+        const after = s.slice(m.index + m[0].length, m.index + m[0].length + 14);
+        const bc = /^\s*av\.?\s*J\.?-?C/i.test(after);
+        const y = parseInt(m[2], 10);
+        out.push({ y: bc ? -y : y, label: bc ? y + ' av. J.-C.' : String(y), text: s.length > 190 ? s.slice(0, 187).replace(/\s+\S*$/, '') + '…' : s, li: li });
+        n++;
+      });
+    });
+    out.sort(function (a, b) { return a.y - b.y || a.li - b.li; });
+    return out.slice(0, 90);
+  }
+
+  // ---- cours suggéré ----
+  const NEXT = [
+    [/révolution française/i, ['Napoléon Ier', 'Révolution industrielle', 'Première Guerre mondiale']], [/napoléon/i, ['Première Guerre mondiale', 'Révolution industrielle']],
+    [/première guerre/i, ['Seconde Guerre mondiale', 'Guerre froide']], [/seconde guerre/i, ['Guerre froide', 'Union européenne', 'Décolonisation']],
+    [/guerre froide/i, ['Union européenne', 'Mondialisation']], [/rome|romain/i, ['Empire romain', 'Moyen Âge', 'Grèce antique']],
+    [/grèce/i, ['Rome antique', 'Mythologie grecque']], [/égypte/i, ['Grèce antique', 'Rome antique']], [/moyen âge/i, ['Croisades', 'Vikings', 'Renaissance']],
+    [/viking/i, ['Moyen Âge', 'Charlemagne']], [/renaissance/i, ['Philosophie des Lumières', 'Révolution française']], [/louis xiv/i, ['Révolution française', 'Philosophie des Lumières']],
+    [/système solaire/i, ['Astronomie', 'Astronautique', 'Relativité restreinte']], [/cellule/i, ['Génétique', 'Évolution biologique', 'Système immunitaire']],
+    [/génétique/i, ['Évolution biologique', 'Cellule']], [/évolution/i, ['Génétique', 'Tectonique des plaques']], [/immunitaire/i, ['Système nerveux', 'Nutrition']],
+    [/nerveux/i, ['Sommeil', 'Psychologie']], [/intelligence artificielle/i, ['Internet', 'Cybersécurité']], [/internet/i, ['Cybersécurité', 'Intelligence artificielle']],
+    [/union européenne/i, ['Géopolitique', 'Mondialisation', 'Démocratie']], [/philosophie/i, ['Psychologie', 'Démocratie']], [/impressionnisme/i, ['Peinture', 'Renaissance']],
+    [/mythologie/i, ['Grèce antique', 'Littérature française']]
+  ];
+  function suggestNext(c) {
+    const have = study.courses.map(function (x) { return x.title.toLowerCase(); });
+    const out = [];
+    const add = function (t) {
+      const l = t.toLowerCase();
+      if (out.length < 3 && out.indexOf(t) < 0 && !have.some(function (h) { return h.indexOf(l) >= 0 || l.indexOf(h) >= 0; })) out.push(t);
+    };
+    NEXT.forEach(function (n) { if (n[0].test(c.title)) n[1].forEach(add); });
+    const gname = { histoire: 'Histoire', sciences: 'Sciences', corps: 'Corps et technologie', tech: 'Corps et technologie', monde: 'Monde et société', arts: 'Arts et idées' }[c.domain];
+    const group = SUGGEST_GROUPS.filter(function (g) { return g[0] === gname; })[0];
+    if (group) shuffle(group[1].slice()).forEach(add);
+    return out;
+  }
+  function suggestCard(c) {
+    const sg = suggestNext(c);
+    if (!sg.length) return el('div');
+    const box = el('div', 'pcard cta');
+    box.appendChild(el('h3', null, '👉 Et maintenant ?'));
+    box.appendChild(el('p', 'sub', 'Pour continuer sur ta lancée après « ' + c.title + ' » :'));
+    const chips = el('div', 'chips');
+    sg.forEach(function (t) { const b = el('button', 'chip', t); b.type = 'button'; b.addEventListener('click', function () { searchFor(t); }); chips.appendChild(b); });
+    box.appendChild(chips);
+    return box;
+  }
 
   // ---- interface ----
   const studyPanel = document.getElementById('studyPanel');
@@ -1878,7 +2092,7 @@
 
   function renderStudy() {
     studyBody.textContent = '';
-    ({ home: viewHome, nw: viewNew, course: viewCourse, lesson: viewLesson, session: viewSession, summary: viewSummary })[sv.view](studyBody);
+    ({ home: viewHome, nw: viewNew, course: viewCourse, lesson: viewLesson, session: viewSession, summary: viewSummary, timeline: viewTimeline })[sv.view](studyBody);
     updateStudyBadge();
   }
 
@@ -1889,6 +2103,7 @@
     hero.appendChild(el('p', 'sub', due.length ? 'Se tester à intervalles réguliers est la meilleure façon de retenir. 5 minutes suffisent.' : nextDueText()));
     if (due.length) hero.appendChild(pbtn('Réviser maintenant', '', startReview));
     body.appendChild(hero);
+    if (study.deck.length) body.appendChild(el('p', 'sub', '📌 ' + study.deck.length + ' carte' + (study.deck.length > 1 ? 's' : '') + ' sauvegardée' + (study.deck.length > 1 ? 's' : '') + ' dans tes révisions (le ♥ du fil les ajoute automatiquement).'));
 
     // suivi
     const done = study.courses.filter(function (c) { return c.completed; }).length;
@@ -1923,7 +2138,7 @@
     study.courses.forEach(function (c) {
       const card = el('button', 'crs'); card.type = 'button';
       const tx = el('div', 'ct');
-      tx.appendChild(el('b', null, c.title + (c.diploma ? ' 🏅' : c.completed ? ' 🥉' : '')));
+      tx.appendChild(el('b', null, (c.emblem || '📚') + ' ' + c.title + (c.mastered ? ' 💎' : c.diploma ? ' 🏅' : c.completed ? ' 🥉' : '')));
       const d = lessonsDone(c);
       tx.appendChild(el('span', null, d + '/' + c.lessons.length + ' leçons · Maîtrise ' + mastery(c) + ' %'));
       tx.appendChild(progressBar(Math.round(d / c.lessons.length * 100)));
@@ -1931,22 +2146,20 @@
       card.addEventListener('click', function () { go('course', { cid: c.id, related: null }); });
       body.appendChild(card);
     });
+    const lastDone = study.courses.filter(function (x) { return x.completed; })[0];
+    if (lastDone) body.appendChild(suggestCard(lastDone));
     body.appendChild(el('div', 'gap'));
     body.appendChild(pbtn('+ Nouveau cours', '', function () { go('nw', { q: '', res: null, msg: '' }); }));
 
-    // succès
-    body.appendChild(el('h4', null, 'Mes succès'));
-    if (!study.ach.length) body.appendChild(el('p', 'sub', 'Termine toutes les leçons d\'un cours pour gagner une médaille 🥉, puis réussis l\'examen final (' + PASS_EXAM + ' % minimum) pour la médaille 🏅.'));
+    // collection de badges (un badge par cours)
+    body.appendChild(el('h4', null, 'Ma collection de badges'));
+    if (!study.courses.length && !study.badges.length) body.appendChild(el('p', 'sub', 'Chaque cours a son propre badge, avec un emblème lié au sujet. Il évolue : 🥉 quand tu termines le cours, 🏅 quand tu réussis l\'examen final, 💎 quand tu le maîtrises vraiment (80 % de mémorisation).'));
     else {
-      const grid = el('div', 'medals');
-      study.ach.slice().reverse().forEach(function (a) {
-        const m = el('div', 'medal' + (a.tier === 'diplome' ? ' gold' : ''));
-        m.appendChild(el('div', 'me', a.tier === 'diplome' ? '🏅' : '🥉'));
-        m.appendChild(el('b', null, a.title));
-        m.appendChild(el('span', null, (a.tier === 'diplome' ? 'Examen réussi' + (a.score != null ? ' · ' + a.score + ' %' : '') : 'Cours terminé') + ' · ' + a.date.split('-').reverse().join('/')));
-        grid.appendChild(m);
-      });
+      const grid = el('div', 'bgrid2');
+      study.courses.forEach(function (c) { grid.appendChild(badgeCard(c, study.badges.find(function (x) { return x.cid === c.id; }))); });
+      study.badges.forEach(function (bd) { if (!study.courses.some(function (c) { return c.id === bd.cid; })) grid.appendChild(badgeCard(null, bd)); });
       body.appendChild(grid);
+      body.appendChild(el('p', 'sub', '🥉 cours terminé · 🏅 examen final réussi · 💎 maîtrise à 80 %'));
     }
 
     // rappel quotidien
@@ -2084,7 +2297,12 @@
     body.appendChild(backBtn('Mes cours', function () { go('home'); }));
     const total = c.lessons.length, d = lessonsDone(c);
     const top = el('div', 'pcard');
-    top.appendChild(el('h3', null, c.title + (c.diploma ? ' 🏅' : c.completed ? ' 🥉' : '')));
+    const bh = el('div', 'who');
+    const ring = el('div', 'bring big', c.emblem || '📚'); ring.style.borderColor = topTierColor(study.badges.find(function (x) { return x.cid === c.id; }));
+    bh.appendChild(ring);
+    const bt = el('div'); bt.appendChild(el('div', 'nm', c.title)); bt.appendChild(tierRow(study.badges.find(function (x) { return x.cid === c.id; })));
+    bh.appendChild(bt);
+    top.appendChild(bh);
     if (c.desc) top.appendChild(el('p', 'sub', c.desc));
     top.appendChild(progressBar(Math.round(d / total * 100)));
     top.appendChild(el('div', 'xpnote', d + '/' + total + ' leçons · ' + c.modules.length + ' chapitre' + (c.modules.length > 1 ? 's' : '') + ' · Maîtrise ' + mastery(c) + ' %' + (c.exam != null ? ' · Examen ' + c.exam + ' %' : '')));
@@ -2093,8 +2311,23 @@
     if (nextIdx >= 0) r.appendChild(pbtn((d ? 'Continuer : leçon ' : 'Commencer : leçon ') + (nextIdx + 1), '', function () { go('lesson', { li: nextIdx }); }));
     else if (!c.diploma) r.appendChild(pbtn('Passer l\'examen final', '', function () { startExam(c); }));
     else r.appendChild(el('p', 'sub', '🏅 Cours validé ! Tes révisions continuent automatiquement.'));
+    if (timelineEvents(c, -1).length >= 4) r.appendChild(pbtn('🕰️ Frise chronologique', 'ghost', function () { go('timeline', { tm: -1 }); }));
     top.appendChild(r);
     body.appendChild(top);
+    if (c.completed) body.appendChild(suggestCard(c));
+    const noted = c.lessons.map(function (l, i) { return { l: l, i: i }; }).filter(function (x) { return x.l.note && x.l.note.trim(); });
+    if (noted.length) {
+      const nb = el('div', 'pcard');
+      nb.appendChild(el('h3', null, '✍️ Mes notes · ' + noted.length));
+      noted.forEach(function (x) {
+        const row = el('button', 'noterow'); row.type = 'button';
+        row.appendChild(el('b', null, x.l.title === 'Introduction' ? 'Introduction' : x.l.title));
+        row.appendChild(el('span', null, x.l.note.length > 140 ? x.l.note.slice(0, 137) + '…' : x.l.note));
+        row.addEventListener('click', function () { go('lesson', { li: x.i }); });
+        nb.appendChild(row);
+      });
+      body.appendChild(nb);
+    }
 
     let lastArticle = null;
     c.modules.forEach(function (m, mi) {
@@ -2111,6 +2344,7 @@
         const row = el('button', 'lrow' + (l.done ? ' done' : '')); row.type = 'button';
         row.appendChild(el('span', 'ln', l.done ? '✓' : String(i + 1)));
         row.appendChild(el('span', 'lt', l.title));
+        if (l.note && l.note.trim()) row.appendChild(el('span', 'ls', '✍️'));
         if (l.done && l.score != null) row.appendChild(el('span', 'ls', l.score + ' %'));
         row.addEventListener('click', function () { go('lesson', { li: i }); });
         box.appendChild(row);
@@ -2186,6 +2420,17 @@
       if (lm.terms.length) box.appendChild(el('p', 'sub', 'À retenir : ' + lm.terms.join(' · ')));
       body.appendChild(box);
     }
+    const nb = el('div', 'pcard pform');
+    nb.appendChild(el('h3', null, '✍️ Mes notes'));
+    nb.appendChild(el('p', 'sub', 'Écris ce que tu veux retenir, une question, ta propre version. Elles sont enregistrées automatiquement.'));
+    const ta = el('textarea', 'notes'); ta.placeholder = 'Mes notes sur cette leçon…'; ta.maxLength = 2000; ta.value = l.note || ''; ta.setAttribute('aria-label', 'Mes notes sur cette leçon');
+    let nt = null;
+    ta.addEventListener('input', function () { l.note = ta.value; clearTimeout(nt); nt = setTimeout(saveStudy, 600); });
+    ta.addEventListener('blur', function () { clearTimeout(nt); saveStudy(); });
+    nb.appendChild(ta);
+    body.appendChild(nb);
+    const tlN = timelineEvents(c, l.mod).length;
+    if (tlN >= 3) body.appendChild(pbtn('🕰️ Frise de ce chapitre', 'ghost', function () { go('timeline', { tm: l.mod }); }));
     body.appendChild(el('p', 'src', 'Source : Wikipédia, licence CC BY-SA.'));
     body.appendChild(el('div', 'gap'));
     body.appendChild(pbtn(l.done ? 'Me retester' : 'Je teste ma mémoire', '', function () { startLessonTest(c, sv.li); }));
@@ -2327,10 +2572,10 @@
         if (c.lessons.every(function (x) { return x.done; }) && !c.completed) {
           c.completed = todayKey();
           profile.courses = (profile.courses || 0) + 1;
-          addAchievement(c, 'termine', null);
+          awardTier(c, 'bronze', null);
+          sum.courseDone = true;
           studyCredit(50, 0);
-          sum.news.push('🥉 Cours terminé ! Une médaille est ajoutée à tes succès.');
-          celebrate('Cours terminé', c.title, 'Médaille 🥉 gagnée. Passe l\'examen final pour la médaille 🏅.', '#CD7F32');
+          sum.news.push('🥉 Cours terminé ! Le badge « ' + c.title + ' » est ajouté à ta collection.');
         }
       }
     } else if (c && S.mode === 'test') {
@@ -2342,11 +2587,15 @@
       if (pct >= PASS_EXAM && !c.diploma) {
         c.diploma = todayKey();
         profile.diplomas = (profile.diplomas || 0) + 1;
-        addAchievement(c, 'diplome', c.exam);
+        awardTier(c, 'or', c.exam);
         studyCredit(50, 0);
-        sum.news.push('🏅 Examen réussi ! Médaille d\'or ajoutée à tes succès.');
-        celebrate('Examen réussi', c.title, 'Médaille 🏅 : ' + c.exam + ' %', '#D4AF6A');
+        sum.news.push('🏅 Examen réussi ! Ton badge passe en or.');
       }
+    }
+    if (c) { syncBadge(c); if (checkMastery(c)) sum.news.push('💎 Maîtrise atteinte ! Ton badge passe en diamant.'); }
+    if (S.mode === 'review') {
+      const seen = {};
+      S.queue.forEach(function (e) { if (e.c && !seen[e.c.id]) { seen[e.c.id] = 1; if (checkMastery(e.c)) sum.news.push('💎 Maîtrise atteinte pour « ' + e.c.title + ' » !'); } });
     }
     saveStudy();
     sv.sess = null;
@@ -2381,10 +2630,49 @@
       r.appendChild(pbtn('Terminer', 'ghost', function () { go('home'); }));
     }
     body.appendChild(r);
+    if (sum.courseDone && c) body.appendChild(suggestCard(c));
+  }
+
+  function viewTimeline(body) {
+    const c = courseOf();
+    if (!c) { go('home'); return; }
+    body.appendChild(backBtn(c.title, function () { go('course'); }));
+    body.appendChild(el('h2', 'ltitle', '🕰️ Frise chronologique'));
+    if (c.modules.length > 1) {
+      const chips = el('div', 'chips'); chips.style.marginBottom = '18px';
+      const mk = function (label, v) { const b = el('button', 'chip', label); b.type = 'button'; b.setAttribute('aria-pressed', sv.tm === v ? 'true' : 'false'); b.addEventListener('click', function () { go('timeline', { tm: v }); }); chips.appendChild(b); };
+      mk('Tout le cours', -1);
+      c.modules.forEach(function (m, mi) { mk('Ch. ' + (mi + 1), mi); });
+      body.appendChild(chips);
+    }
+    const ev = timelineEvents(c, sv.tm == null ? -1 : sv.tm);
+    if (!ev.length) { body.appendChild(el('p', 'sub', 'Pas assez de dates dans cette partie du cours.')); return; }
+    body.appendChild(el('p', 'sub', ev.length + ' repères, du plus ancien au plus récent. Touche-en un pour relire la leçon.'));
+    const tl = el('div', 'tl');
+    ev.forEach(function (e) {
+      const row = el('button', 'tli'); row.type = 'button';
+      row.appendChild(el('span', 'tdot'));
+      const box = el('div', 'tbox');
+      box.appendChild(el('b', null, e.label));
+      box.appendChild(el('p', null, e.text));
+      box.appendChild(el('span', 'tls', 'Leçon ' + (e.li + 1)));
+      row.appendChild(box);
+      row.addEventListener('click', function () { go('lesson', { li: e.li }); });
+      tl.appendChild(row);
+    });
+    body.appendChild(tl);
+  }
+
+  async function searchFor(q) {
+    go('nw', { q: q, res: null, msg: 'Recherche…' });
+    try { sv.res = await wikiSearch(q); sv.msg = sv.res.length ? '' : 'Aucun résultat, essaie d\'autres mots-clés.'; }
+    catch (e) { sv.msg = 'Impossible de chercher pour le moment.'; }
+    renderStudy();
   }
 
   function openStudy() { sv.view = 'home'; sv.sess = null; sv.related = null; renderStudy(); studyPanel.classList.add('open'); studyPanel.scrollTop = 0; }
   document.getElementById('studyBtn').addEventListener('click', openStudy);
+  syncDeckFromSaved();
   document.getElementById('closeStudy').addEventListener('click', function () { studyPanel.classList.remove('open'); });
   updateStudyBadge();
   setTimeout(function () {
