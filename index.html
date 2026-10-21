@@ -30,19 +30,19 @@
   #feed { height: 100dvh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
   #feed::-webkit-scrollbar { display: none; }
 
-  .card { position: relative; height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+  .card { position: relative; height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
   .bg { position: absolute; inset: 0; }
   .bg .letter { position: absolute; right: -3vw; top: 10vh; font: 700 72vw/1 var(--serif); color: rgba(255,255,255,.06); pointer-events: none; }
   .bg .blur { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(38px) saturate(1.25); transform: scale(1.1); opacity: 0; transition: opacity .8s ease; }
   .bg .blur.on { opacity: .55; }
-  .frame { position: absolute; left: 16px; right: 16px; top: calc(66px + env(safe-area-inset-top)); height: clamp(190px, 38dvh, 400px); border-radius: 24px; overflow: hidden; background: rgba(255,255,255,.04); box-shadow: 0 18px 50px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.12); opacity: 0; transition: opacity .7s ease; }
+  .frame { position: relative; flex: 1 1 0; min-height: 96px; max-height: 46dvh; margin: calc(72px + env(safe-area-inset-top)) 16px 20px; border-radius: 24px; overflow: hidden; background: rgba(255,255,255,.04); box-shadow: 0 18px 50px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.12); opacity: 0; transition: opacity .7s ease; }
   .frame.on { opacity: 1; }
   .frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; }
   .shade { position: absolute; inset: 0; background:
       linear-gradient(to top, rgba(8,11,20,.98) 0%, rgba(8,11,20,.88) 30%, rgba(8,11,20,.25) 62%, rgba(8,11,20,0) 78%),
       linear-gradient(to bottom, rgba(8,11,20,.45) 0%, rgba(8,11,20,0) 14%); }
 
-  .content { position: relative; padding: 0 86px calc(74px + env(safe-area-inset-bottom)) 22px; }
+  .content { position: relative; padding: 0 86px 14px 22px; }
   .content h2 { margin: 0 0 8px; font: 700 clamp(30px, 8.6vw, 40px)/1.06 var(--serif); letter-spacing: -.015em; text-wrap: balance; }
   .content .desc { margin: 0 0 14px; font-size: 14.5px; color: var(--gold); letter-spacing: .01em; }
   .content .text { margin: 0; font-size: 18px; line-height: 1.48; color: #ECE8DD; }
@@ -56,12 +56,14 @@
   .long h4, .item .more h4 { margin: 24px 0 8px; font: 700 15px var(--sans); color: var(--gold); }
   .long h4:first-child, .item .more h4:first-child { margin-top: 4px; }
   .long[hidden] { display: none; }
-  .content.reading { position: absolute; left: 0; right: 0; bottom: 0; max-height: 80dvh; overflow-y: auto; padding: 26px 22px calc(78px + env(safe-area-inset-bottom)); background: rgba(11,15,26,.82); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); border-radius: 28px 28px 0 0; border-top: 1px solid rgba(255,255,255,.12); }
+  .content.reading { position: absolute; left: 0; right: 0; bottom: 0; max-height: 80dvh; overflow-y: auto; padding: 26px 22px calc(36px + env(safe-area-inset-bottom)); background: rgba(11,15,26,.82); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); border-radius: 28px 28px 0 0; border-top: 1px solid rgba(255,255,255,.12); }
   .content.reading::before { content: ""; position: absolute; top: 9px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: rgba(255,255,255,.25); }
-  .content.reading .text { margin-bottom: 16px; font-weight: 600; }
+  .content.reading .text { display: none; }
+  #credit { transition: opacity .25s; }
+  body.reading-open #credit { opacity: 0; visibility: hidden; }
   .card.reading .actions { display: none; }
 
-  .actions { position: absolute; right: 14px; bottom: calc(78px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .actions { position: absolute; right: 14px; bottom: calc(68px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; align-items: center; }
   .btn { width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(11,15,26,.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--ivory); display: grid; place-items: center; cursor: pointer; padding: 0; transition: background .2s, color .2s, border-color .2s; }
   .btn svg, .tbtn svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .btn:active { transform: scale(.93); }
@@ -70,7 +72,7 @@
   .btn.pop { animation: pop .3s ease-out; }
   @keyframes pop { 50% { transform: scale(1.2); } }
 
-  #top { position: fixed; left: 0; right: 0; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: calc(12px + env(safe-area-inset-top)) 16px 26px; background: linear-gradient(to bottom, rgba(8,11,20,.6), transparent); pointer-events: none; }
+  #top { position: fixed; left: 0; right: 0; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: calc(12px + env(safe-area-inset-top)) 16px 14px; background: linear-gradient(to bottom, rgba(8,11,20,.6), transparent); pointer-events: none; }
   #top > * { pointer-events: auto; }
   .logo { font: 700 24px var(--serif); letter-spacing: -.01em; }
   .logo i { color: var(--gold); font-style: normal; }
@@ -83,8 +85,6 @@
   #credit .by { font-size: .62em; color: var(--gold); margin-right: .08em; }
   #credit .sig { margin-top: 1px; font-family: "Mrs Saint Delafield", "Snell Roundhand", "Apple Chancery", "Segoe Script", "Brush Script MT", cursive; font-size: 34px; color: var(--ivory); transform: rotate(-3deg); white-space: nowrap; text-shadow: 0 2px 10px rgba(0,0,0,.55); }
   #credit svg { width: 130px; height: 10px; margin-top: -3px; fill: none; stroke: var(--gold); stroke-width: 1.4; stroke-linecap: round; transform: rotate(-1.5deg); }
-  #hint { position: absolute; left: 0; right: 0; top: calc(64px + env(safe-area-inset-top)); text-align: center; font-size: 13px; color: var(--muted); transition: opacity .6s; pointer-events: none; }
-  #hint.gone { opacity: 0; }
 
   .center { height: 100dvh; scroll-snap-align: start; display: grid; place-items: center; text-align: center; padding: 32px; color: var(--muted); line-height: 1.5; }
   .center .big { font: 700 40px var(--serif); color: var(--ivory); margin-bottom: 10px; }
@@ -125,8 +125,16 @@
 
 
   .tbtn .av { font-size: 20px; line-height: 1; }
-  #toast { position: fixed; left: 50%; top: calc(72px + env(safe-area-inset-top)); transform: translate(-50%, -16px); opacity: 0; z-index: 20; max-width: 88vw; padding: 10px 16px; border-radius: 20px; border: 1px solid var(--gold); background: rgba(11,15,26,.94); color: var(--ivory); font: 600 14px var(--sans); text-align: center; pointer-events: none; transition: opacity .3s, transform .3s; }
+  #toast { position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translate(-50%, 16px); opacity: 0; z-index: 20; max-width: 88vw; padding: 10px 16px; border-radius: 20px; border: 1px solid var(--gold); background: rgba(11,15,26,.96); color: var(--ivory); font: 600 14px var(--sans); text-align: center; pointer-events: none; transition: opacity .3s, transform .3s; }
   #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .sub { margin: 0 0 12px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+  .who + .sub { margin-top: 14px; }
+  html, body { overflow-x: hidden; }
+  h1, h2, h3, .lt, .ct b, .mhead b, .tbox p, .qtext, .lp, .fb p { overflow-wrap: anywhere; }
+  .content { max-height: calc(100dvh - 250px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y: auto; scrollbar-width: none; }
+  .content::-webkit-scrollbar { display: none; }
+  .content.reading { max-height: 80dvh; }
+  .content.reading .morebtn { display: block; margin-top: 8px; margin-bottom: 14px; }
 
   .pcard { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 22px; padding: 16px; margin-bottom: 14px; }
   .pcard h3 { margin: 0 0 12px; font: 700 17px var(--serif); }
@@ -287,6 +295,48 @@
   .tbox b { display: block; font: 700 22px/1.1 var(--serif); color: var(--gold); }
   .tbox p { margin: 5px 0 0; font: 16px/1.55 var(--serif); color: #E6E2D7; }
   .tbox .tls { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+  #who { position: fixed; inset: 0; z-index: 100; overflow-y: auto; background: var(--ink); padding: calc(28px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom)); }
+  #who .whobox { max-width: 440px; margin: 0 auto; }
+  #who .logo { font: 700 30px var(--serif); } #who .logo i { color: var(--gold); font-style: normal; }
+  #who h1 { margin: 18px 0 6px; font: 700 32px/1.1 var(--serif); }
+  #who .sub { margin: 0 0 22px; font-size: 15px; line-height: 1.5; color: var(--muted); }
+  #who label { display: block; margin: 18px 0 8px; font-size: 14px; color: var(--muted); }
+  #who input[type=text] { width: 100%; border-radius: 16px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.05); color: var(--ivory); padding: 13px 16px; font: 16px var(--sans); }
+  .wgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .wtile { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 10px; border-radius: 22px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: var(--ivory); cursor: pointer; font: 600 17px var(--serif); }
+  .wtile:active { transform: scale(.97); }
+  .wtile .plus { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; font: 300 40px var(--sans); color: var(--gold); border: 1.5px dashed rgba(212,175,106,.6); }
+  .lvl { display: flex; flex-direction: column; gap: 8px; }
+  .lopt { text-align: left; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,.18); background: transparent; color: var(--ivory); cursor: pointer; font-family: var(--sans); }
+  .lopt b { display: block; font: 700 16px var(--sans); }
+  .lopt span { display: block; margin-top: 2px; font-size: 13px; color: var(--muted); }
+  .lopt[aria-pressed="true"] { border-color: var(--gold); background: rgba(212,175,106,.14); }
+  .tagrow { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+  .tagrow span { padding: 4px 10px; border-radius: 12px; background: rgba(212,175,106,.18); border: 1px solid rgba(212,175,106,.35); color: var(--gold); font: 600 12.5px var(--sans); }
+  .banner { height: 150px; margin: -4px -4px 14px; border-radius: 16px; background: #19203A center/cover; }
+  .bring.photo { position: relative; background-size: cover; background-position: center; font-size: 0; }
+  .bring .em { position: absolute; right: -8px; bottom: -8px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; line-height: 1; background: var(--ink); border: 2px solid rgba(255,255,255,.25); }
+  .bring.big.photo .em { width: 30px; height: 30px; font-size: 18px; }
+  .drow { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .drow .dl { flex: 1; font: 600 15.5px var(--sans); }
+  .src:empty { display: none; }
+  .who { flex-wrap: wrap; row-gap: 10px; }
+  .who .nm { overflow-wrap: break-word; }
+  .who > div:not(.avatar):not(.avb):not(.bring) { min-width: 0; flex: 1 1 120px; }
+  .goalrow { flex-wrap: wrap; }
+  .goalrow .txt { min-width: 150px; }
+  .gchips { flex-wrap: wrap; }
+  .addrow { flex-wrap: wrap; }
+  .addrow input { flex: 1 1 120px; min-width: 0; width: auto; }
+  .pbtn { max-width: 100%; }
+  .content:not(.reading) .text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 8; overflow: hidden; }
+  @media (max-height: 760px) { .content:not(.reading) .text { -webkit-line-clamp: 5; font-size: 16.5px; } .content h2 { font-size: clamp(24px, 7vw, 30px); } }
+  @media (max-height: 640px) { .content:not(.reading) .text { -webkit-line-clamp: 3; } }
+  @media (max-height: 700px) { #credit .sig { font-size: 26px; } #credit svg { width: 100px; } }
+  .credits { margin-top: 18px; }
+  .credits summary { cursor: pointer; color: var(--muted); font-size: 13.5px; }
+  .credits p { margin: 8px 0 0; }
+  .cloudrow { margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.1); }
   @media (prefers-reduced-motion: reduce) { #levelup.show .lu-card { animation: none; } .btn.pop { animation: none; } .bg .blur, .frame, #hint, .sheetpanel { transition: none; } }
 </style>
 </head>
@@ -309,7 +359,6 @@
       <span class="badge" id="savedCount"></span>
     </button>
   </div>
-  <span id="hint">Glisse vers le haut</span>
 </div>
 
 <div id="credit" aria-label="by Thomas.P">
@@ -341,7 +390,7 @@
 
 <section class="sheetpanel" id="topics" aria-label="Thèmes">
   <header><h1>Sources et thèmes</h1><button class="close" id="closeTopics">Fermer</button></header>
-  <input id="search" type="search" placeholder="Chercher un thème…" autocomplete="off">
+  <input id="search" type="search" placeholder="Chercher un thème (ex. Première Guerre mondiale)…" autocomplete="off">
   <div id="groups"></div>
   <div id="topicsFoot">
     <button id="clearTopics" type="button">Tout</button>
@@ -350,10 +399,242 @@
 </section>
 
 <script>
+// --- profils : choix du profil au démarrage (tout reste sur ce téléphone)
 (function () {
+  var PK = ['profile', 'saved', 'topics', 'sources', 'country', 'countryCats', 'study', 'custom', 'friends'];
+  var AV = ['🦊','🐼','🦉','🐯','🦁','🐙','🦄','🐢','🐧','🦋','🐬','🦅','🐺','🐸','🌍','🔭','📚','🎯','⚡','🌙','🚀','🌟','🧠','🎨'];
+  var COL = ['#D4AF6A', '#7AA2F7', '#F7768E', '#9ECE6A', '#BB9AF7', '#E0AF68', '#73DACA', '#FF9E64'];
+  var AGES = [['kid', 'Moins de 12 ans'], ['teen', '12 à 15 ans'], ['young', '16 à 25 ans'], ['adult', '26 ans et plus']];
+  var LEVELS = [['simple', 'Simple', 'Les mêmes explications, en mots plus simples'], ['normal', 'Normal', 'Les textes de référence'], ['detail', 'Détaillé', 'Plus de précisions dès la première lecture']];
+  function get(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  var list = get('curio.profiles', []);
+  if (!Array.isArray(list)) list = [];
+  // données d'avant les profils : elles deviennent le premier profil
+  if (!list.length && localStorage.getItem('curio.profile')) {
+    var old = get('curio.profile', {}) || {};
+    var oid = 'p' + Date.now().toString(36);
+    PK.forEach(function (k) { var v = localStorage.getItem('curio.' + k); if (v !== null) { try { localStorage.setItem('curio.u.' + oid + '.' + k, v); localStorage.removeItem('curio.' + k); } catch (e) {} } });
+    list.push({ id: oid, name: old.name || 'Moi', avatar: old.avatar || '🦊', color: old.avatarColor || '#D4AF6A', photo: old.avatarUrl || '', age: 'adult', level: 'normal' });
+    set('curio.profiles', list);
+  }
+  // ---------- transfert d'un profil vers un autre téléphone (code ou fichier) ----------
+  function b64e(bytes) { var t = ''; for (var i = 0; i < bytes.length; i += 0x8000) t += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(t); }
+  function b64d(str) { var t = atob(str), b = new Uint8Array(t.length); for (var i = 0; i < t.length; i++) b[i] = t.charCodeAt(i); return b; }
+  async function gz(bytes) { var st = new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip')); return new Uint8Array(await new Response(st).arrayBuffer()); }
+  async function gunzip(bytes) { var st = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')); return new Uint8Array(await new Response(st).arrayBuffer()); }
+  var X = window.CURIO_XFER = {};
+  X.build = function (uid, light) {
+    var m = list.filter(function (x) { return x.id === uid; })[0] || {};
+    var data = {};
+    PK.forEach(function (k) {
+      if (light && k === 'study') return;
+      var v = get('curio.u.' + uid + '.' + k, undefined);
+      if (v === undefined) return;
+      if (light && k === 'profile') { v = Object.assign({}, v); v.avatarUrl = ''; }
+      data[k] = v;
+    });
+    return { app: 'curio', v: 2, exported: new Date().toISOString(), meta: { name: m.name, avatar: m.avatar, color: m.color, photo: light ? '' : (m.photo || ''), level: m.level, age: m.age }, data: data };
+  };
+  X.pack = async function (obj) {
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    if (window.CompressionStream) { try { return 'CURIO2G:' + b64e(await gz(bytes)); } catch (e) {} }
+    return 'CURIO2:' + b64e(bytes);
+  };
+  X.unpack = async function (str) {
+    var t = String(str).replace(/\s+/g, '');
+    var m = /(CURIO2G|CURIO2):([A-Za-z0-9+\/=]+)/.exec(t);
+    if (!m) throw new Error('format');
+    var bytes = b64d(m[2]);
+    if (m[1] === 'CURIO2G') bytes = await gunzip(bytes);
+    var o = JSON.parse(new TextDecoder().decode(bytes));
+    if (!o || o.app !== 'curio' || !o.data || typeof o.data !== 'object') throw new Error('format');
+    return o;
+  };
+  X.install = function (o) {
+    if (list.length >= 8) throw new Error('full');
+    var id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    var m = o.meta || {};
+    var pr = (o.data.profile && typeof o.data.profile === 'object') ? o.data.profile : {};
+    var photo = (typeof m.photo === 'string' && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(m.photo) && m.photo.length < 120000) ? m.photo : '';
+    list.push({ id: id, name: String(m.name || pr.name || 'Profil').slice(0, 20), avatar: String(m.avatar || pr.avatar || '🦊').slice(0, 8), color: /^#[0-9a-fA-F]{6}$/.test(m.color || '') ? m.color : '#D4AF6A', photo: photo, age: m.age || 'adult', level: ['simple', 'normal', 'detail'].indexOf(m.level) >= 0 ? m.level : 'normal' });
+    PK.forEach(function (k) { if (o.data[k] !== undefined) set('curio.u.' + id + '.' + k, o.data[k]); });
+    set('curio.profiles', list);
+    return id;
+  };
+
+  var chosen = null;
+  try { chosen = sessionStorage.getItem('curio.chosen'); } catch (e) {}
+  var cur = list.filter(function (p) { return p.id === chosen; })[0];
+  window.CURIO_PK = PK;
+  window.CURIO_UID = cur ? cur.id : null;
+  window.CURIO_META = cur || null;
+  if (cur) return;
+
+  function mk(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function avatar(p, size) {
+    var a = mk('div', 'avatar'); a.style.width = a.style.height = size + 'px'; a.style.fontSize = Math.round(size * 0.52) + 'px';
+    if (p.photo && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p.photo)) a.style.backgroundImage = 'url("' + p.photo + '")';
+    else { a.style.background = (p.color || '#D4AF6A') + '38'; a.textContent = p.avatar || '🙂'; }
+    a.style.boxShadow = '0 0 0 1px rgba(255,255,255,.22)';
+    return a;
+  }
+  function choose(id) { try { sessionStorage.setItem('curio.chosen', id); } catch (e) {} location.reload(); }
+  var overlay = mk('div'); overlay.id = 'who';
+  document.body.appendChild(overlay);
+
+  function showList() {
+    overlay.textContent = '';
+    var box = mk('div', 'whobox');
+    box.appendChild(mk('div', 'logo', 'Curio'));
+    box.lastChild.appendChild((function () { var i = mk('i', null, '.'); return i; })());
+    box.appendChild(mk('h1', null, list.length ? 'Qui est-ce ?' : 'Bienvenue !'));
+    box.appendChild(mk('p', 'sub', list.length ? 'Choisis ton profil pour retrouver ta progression.' : 'Crée ton profil pour commencer.'));
+    var grid = mk('div', 'wgrid');
+    list.forEach(function (p) {
+      var t = mk('button', 'wtile'); t.type = 'button';
+      t.appendChild(avatar(p, 76));
+      t.appendChild(mk('span', null, p.name));
+      t.addEventListener('click', function () { choose(p.id); });
+      grid.appendChild(t);
+    });
+    if (list.length < 8) {
+      var add = mk('button', 'wtile add'); add.type = 'button';
+      add.appendChild(mk('div', 'plus', '+'));
+      add.appendChild(mk('span', null, 'Nouveau profil'));
+      add.addEventListener('click', showForm);
+      grid.appendChild(add);
+    }
+    box.appendChild(grid);
+    var imp = mk('div', 'cloudrow');
+    imp.appendChild(mk('p', 'sub', 'Tu as déjà un profil sur un autre téléphone ?'));
+    var ib = mk('button', 'pbtn ghost', '📥 J\'ai déjà un profil'); ib.type = 'button';
+    ib.addEventListener('click', showImport);
+    imp.appendChild(ib);
+    box.appendChild(imp);
+    overlay.appendChild(box);
+  }
+
+  function showImport() {
+    overlay.textContent = '';
+    var box = mk('div', 'whobox form');
+    box.appendChild(mk('h1', null, 'Retrouver mon profil'));
+    box.appendChild(mk('p', 'sub', 'Sur ton autre téléphone : ouvre Curio, va dans ton profil, rubrique « Changer de téléphone », et appuie sur « Copier mon code de transfert ». Colle-le ici, ou choisis le fichier de sauvegarde.'));
+    var ta = mk('textarea'); ta.placeholder = 'Colle ici le code de transfert…';
+    ta.style.cssText = 'width:100%;min-height:120px;border-radius:16px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#F4EFE4;padding:12px 16px;font:13px sans-serif';
+    box.appendChild(ta);
+    var m = mk('p', 'msg'); m.style.display = 'none'; box.appendChild(m);
+    function say(t) { m.textContent = t; m.style.display = t ? 'block' : 'none'; }
+    var row = mk('div', 'prow');
+    var ok = mk('button', 'pbtn', 'Importer'); ok.type = 'button';
+    async function go(o) {
+      try { var id = X.install(o); choose(id); }
+      catch (e) { say(e && e.message === 'full' ? 'Tu as déjà 8 profils sur ce téléphone.' : 'Impossible d\'importer ce profil.'); ok.disabled = false; }
+    }
+    ok.addEventListener('click', async function () {
+      if (!ta.value.trim()) { say('Colle d\'abord ton code.'); return; }
+      ok.disabled = true; say('');
+      try { await go(await X.unpack(ta.value)); } catch (e) { say('Ce code n\'est pas valide. Vérifie qu\'il est complet.'); ok.disabled = false; }
+    });
+    var fi = mk('input'); fi.type = 'file'; fi.accept = '.json,application/json'; fi.hidden = true;
+    fi.addEventListener('change', function () {
+      var f = fi.files && fi.files[0]; if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () { try { var o = JSON.parse(rd.result); if (!o || o.app !== 'curio' || !o.data) throw new Error('format'); go(o); } catch (e) { say('Ce fichier n\'est pas une sauvegarde Curio.'); } };
+      rd.readAsText(f);
+    });
+    var fb = mk('button', 'pbtn ghost', 'Choisir un fichier'); fb.type = 'button'; fb.addEventListener('click', function () { fi.click(); });
+    var back = mk('button', 'pbtn ghost', 'Retour'); back.type = 'button'; back.addEventListener('click', showList);
+    row.append(ok, fb, back, fi);
+    box.appendChild(row);
+    overlay.appendChild(box);
+  }
+
+  function showForm() {
+    overlay.textContent = '';
+    var box = mk('div', 'whobox form');
+    box.appendChild(mk('h1', null, 'Nouveau profil'));
+    var impL = mk('button', 'lnk', '📥 J\'ai déjà un profil sur un autre téléphone'); impL.type = 'button'; impL.style.marginBottom = '6px';
+    impL.addEventListener('click', showImport);
+    box.appendChild(impL);
+    var l1 = mk('label', null, 'Ton pseudo'); l1.setAttribute('for', 'wname');
+    var name = mk('input'); name.type = 'text'; name.id = 'wname'; name.maxLength = 20; name.placeholder = 'Ex. Thomas'; name.autocomplete = 'off';
+    box.append(l1, name);
+    var age = '', level = 'normal', av = AV[0], col = COL[0];
+    box.appendChild(mk('label', null, 'Ton âge'));
+    var ages = mk('div', 'chips');
+    AGES.forEach(function (a) {
+      var b = mk('button', 'chip', a[1]); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () {
+        age = a[0];
+        ages.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        level = a[0] === 'kid' ? 'simple' : 'normal';
+        refreshLevels();
+      });
+      ages.appendChild(b);
+    });
+    box.appendChild(ages);
+    box.appendChild(mk('label', null, 'Niveau d\'explication'));
+    var lv = mk('div', 'lvl');
+    function refreshLevels() { lv.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.id === level ? 'true' : 'false'); }); }
+    LEVELS.forEach(function (x) {
+      var b = mk('button', 'lopt'); b.type = 'button'; b.dataset.id = x[0];
+      b.appendChild(mk('b', null, x[1])); b.appendChild(mk('span', null, x[2]));
+      b.addEventListener('click', function () { level = x[0]; refreshLevels(); });
+      lv.appendChild(b);
+    });
+    box.appendChild(lv);
+    refreshLevels();
+    box.appendChild(mk('p', 'sub', 'Tu pourras changer ce niveau à tout moment dans ton profil. Le sujet reste le même, seule la façon de l\'expliquer change.'));
+    box.appendChild(mk('label', null, 'Ton avatar'));
+    var prev = mk('div', 'prev'); box.appendChild(prev);
+    function drawPrev() { prev.textContent = ''; prev.appendChild(avatar({ avatar: av, color: col }, 76)); }
+    drawPrev();
+    var grid = mk('div', 'avgrid');
+    AV.forEach(function (a) {
+      var b = mk('button', null, a); b.type = 'button'; b.setAttribute('aria-pressed', a === av ? 'true' : 'false');
+      b.addEventListener('click', function () { av = a; grid.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); drawPrev(); });
+      grid.appendChild(b);
+    });
+    box.appendChild(grid);
+    var cg = mk('div', 'colgrid');
+    COL.forEach(function (c) {
+      var b = mk('button'); b.type = 'button'; b.style.background = c; b.setAttribute('aria-pressed', c === col ? 'true' : 'false');
+      b.addEventListener('click', function () { col = c; cg.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); drawPrev(); });
+      cg.appendChild(b);
+    });
+    box.appendChild(cg);
+    var msg = mk('p', 'msg'); msg.style.display = 'none'; box.appendChild(msg);
+    var row = mk('div', 'prow');
+    var ok = mk('button', 'pbtn', 'Créer mon profil'); ok.type = 'button';
+    ok.addEventListener('click', function () {
+      var nm = name.value.trim();
+      if (!nm) { msg.textContent = 'Choisis un pseudo.'; msg.style.display = 'block'; name.focus(); return; }
+      if (!age) { msg.textContent = 'Choisis ta tranche d\'âge.'; msg.style.display = 'block'; return; }
+      var id = 'p' + Date.now().toString(36);
+      list.push({ id: id, name: nm, avatar: av, color: col, photo: '', age: age, level: level });
+      set('curio.profiles', list);
+      choose(id);
+    });
+    row.appendChild(ok);
+    if (list.length) { var back = mk('button', 'pbtn ghost', 'Retour'); back.type = 'button'; back.addEventListener('click', showList); row.appendChild(back); }
+    box.appendChild(row);
+    overlay.appendChild(box);
+  }
+
+  if (list.length) showList(); else showForm();
+})();
+</script>
+<script>
+(function () {
+  if (!window.CURIO_UID) return;
+  const UID = window.CURIO_UID;
+  const META = window.CURIO_META;
+  const PKEYS = window.CURIO_PK.map(function (k) { return 'curio.' + k; });
+  function nk(k) { return PKEYS.indexOf(k) >= 0 ? 'curio.u.' + UID + '.' + k.slice(6) : k; }
+  let LEVEL = META.level || 'normal';
   const WIKI = 'https://fr.wikipedia.org/w/api.php';
   const feed = document.getElementById('feed');
-  const hint = document.getElementById('hint');
   const savedCountEl = document.getElementById('savedCount');
   const themesCount = document.getElementById('themesCount');
   const panel = document.getElementById('panel');
@@ -406,13 +687,16 @@
   const TOPICS = {};
   GROUPS.forEach(function (g) { g[1].forEach(function (t) { TOPICS[t[0]] = t[1]; }); });
 
-  function load(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
-  function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function load(k, d) { try { const v = localStorage.getItem(nk(k)); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function store(k, v) { try { localStorage.setItem(nk(k), JSON.stringify(v)); } catch (e) {} }
 
   let saved = load('curio.saved', {});
+  let friends = load('curio.friends', []);
+  if (!Array.isArray(friends)) friends = [];
   let selected = load('curio.topics', []).filter(function (k) { return TOPICS[k]; });
   let country = load('curio.country', '');
   let countryCats = load('curio.countryCats', []);
+  let selectedCustom = load('curio.custom', []).filter(function (x) { return typeof x === 'string'; }).slice(0, 8);
   let selectedSources = load('curio.sources', []).filter(function (k) { return ['wikipedia', 'voyage', 'day', 'births'].indexOf(k) >= 0; });
   const seenIds = new Set();
   let loading = false;
@@ -422,7 +706,7 @@
   const pending = {};
 
   function updateCount() { const n = Object.keys(saved).length; savedCountEl.textContent = n ? n : ''; }
-  function themesLabel() { const n = selected.length + selectedSources.length + (country ? 1 : 0); themesCount.textContent = n ? n : ''; }
+  function themesLabel() { const n = selected.length + selectedSources.length + selectedCustom.length + (country ? 1 : 0); themesCount.textContent = n ? n : ''; }
   updateCount(); themesLabel();
 
   function hashOf(str) { let h = 0; for (let i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) | 0; } return Math.abs(h); }
@@ -430,12 +714,12 @@
 
   // --- sources (toutes ouvertes au public, sans compte)
   const SOURCES = [
-    ['wikipedia', '📖 Wikipédia'],
-    ['voyage', '🧳 Wikivoyage'],
+    ['wikipedia', '📖 Culture générale'],
+    ['voyage', '🧳 Voyage'],
     ['day', '📅 Ce jour dans l\'histoire'],
     ['births', '🎂 Nés ce jour-là']
   ];
-  const SRC_LABEL = { wikipedia: 'Wikipédia', voyage: 'Wikivoyage', day: 'Wikipédia, Ce jour dans l\'histoire', births: 'Wikipédia, Nés ce jour-là' };
+  const SRC_LABEL = { wikipedia: 'Culture générale', voyage: 'Voyage', day: 'Ce jour dans l\'histoire', births: 'Nés ce jour-là' };
   const WEIGHT = { wikipedia: 4, voyage: 1, day: 1, births: 1 };
   const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
@@ -519,7 +803,7 @@
       if (!pg || !ev.text || !pg.pageid) return;
       const title = (pg.titles && pg.titles.normalized) || pg.title;
       const ago = now.getFullYear() - ev.year;
-      const lead = ev.text.trim().replace(/([^.!?])$/, '$1.');
+      const lead = ev.text.trim().replace(/([^.!?])$/, '$1.').replace(/^\S/, function (ch) { return ch.toUpperCase(); });
       out.push({ type: 'standard', pageid: 'day:' + ev.year + ':' + pg.pageid, wid: pg.pageid, host: 'fr.wikipedia.org', source: 'day',
         title: title, description: now.getDate() + ' ' + MOIS[now.getMonth()] + ' ' + ev.year + (ago > 0 ? ', il y a ' + ago + ' ans' : ''),
         lead: lead, extract: lead + ' ' + (pg.extract || ''), thumbnail: pg.thumbnail || null });
@@ -541,7 +825,7 @@
       const pg = (ev.pages || [])[0];
       if (!pg || !ev.text || !pg.pageid) return;
       const title = (pg.titles && pg.titles.normalized) || pg.title;
-      const lead = ev.text.trim().replace(/([^.!?])$/, '$1.');
+      const lead = ev.text.trim().replace(/([^.!?])$/, '$1.').replace(/^\S/, function (ch) { return ch.toUpperCase(); });
       out.push({ type: 'standard', pageid: 'births:' + ev.year + ':' + pg.pageid, wid: pg.pageid, host: 'fr.wikipedia.org', source: 'births',
         title: title, description: 'Né' + ' le ' + now.getDate() + ' ' + MOIS[now.getMonth()] + ' ' + ev.year,
         lead: lead, extract: lead + ' ' + (pg.extract || ''), thumbnail: pg.thumbnail || null });
@@ -564,7 +848,10 @@
     ['sport', '🏅 Sport', 'sport'], ['pers', '🧑 Personnalités', 'personnalité'], ['pol', '🗳️ Politique', 'politique gouvernement'],
     ['eco', '💶 Économie', 'économie'], ['nat', '🌿 Nature et animaux', 'faune flore parc national'], ['rel', '🛐 Religion', 'religion'],
     ['guerre', '🪖 Armée et guerres', 'armée guerre'], ['fete', '🎉 Fêtes', 'fête'], ['sci', '🎓 Sciences et inventions', 'science invention'],
-    ['trans', '🚆 Transports', 'transport'], ['lit', '📚 Littérature', 'littérature écrivain']
+    ['trans', '🚆 Transports', 'transport'], ['lit', '📚 Littérature', 'littérature écrivain'],
+    ['edu', '🎓 Éducation', 'éducation université'], ['sante', '🩺 Santé', 'santé'], ['art', '🎨 Art et architecture', 'art architecture'],
+    ['agri', '🌾 Agriculture', 'agriculture'], ['env', '🌿 Environnement et climat', 'environnement climat'], ['demo', '👥 Population', 'démographie population'],
+    ['droit', '⚖️ Droit et institutions', 'droit constitution'], ['tour', '🧳 Tourisme', 'tourisme'], ['media', '📰 Médias', 'média presse'], ['tech', '💻 Technologie et industrie', 'technologie industrie']
   ];
   function norm(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 
@@ -593,8 +880,33 @@
     return [];
   }
 
+  async function searchCustom(theme) {
+    const tries = ['morelike:' + theme, theme];
+    let all = [];
+    for (let t = 0; t < tries.length; t++) {
+      const off = t === 1 ? Math.floor(Math.random() * 20) : 0;
+      const url = WIKI + '?action=query&format=json&origin=*&formatversion=2' +
+        '&generator=search&gsrnamespace=0&gsrlimit=20&gsroffset=' + off + '&gsrsearch=' + encodeURIComponent(tries[t]) +
+        '&prop=extracts|pageimages|description&exintro=1&explaintext=1&exsentences=5&exlimit=max&piprop=thumbnail&pithumbsize=960';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const j = await res.json();
+        const items = ((j.query && j.query.pages) || []).map(function (p) { return wikiItem('fr.wikipedia.org', 'wikipedia', p); }).filter(function (d) {
+          return d.extract.length >= 140 && !/peut (désigner|faire référence)/i.test(d.extract) && !seenIds.has(d.pageid);
+        });
+        all = all.concat(items);
+      } catch (e) {}
+    }
+    const seen = {};
+    all = all.filter(function (d) { if (seen[d.pageid]) return false; seen[d.pageid] = 1; return true; });
+    const withImg = all.filter(function (d) { return d.thumbnail; });
+    return shuffle(withImg.length >= 4 ? withImg : all);
+  }
+
   function pickSource() {
     if (country) return 'country';
+    if (selectedCustom.length) return 'custom';
     const ids = selectedSources.length ? selectedSources : (selected.length ? ['wikipedia'] : SOURCES.map(function (x) { return x[0]; }));
     let total = 0;
     ids.forEach(function (id) { total += WEIGHT[id]; });
@@ -622,9 +934,21 @@
           const catId = pick(ids);
           const cat = COUNTRY_CATS.filter(function (c) { return c[0] === catId; })[0] || COUNTRY_CATS[0];
           const nm = country;
+          if (selectedCustom.length) {
+            const th = pick(selectedCustom);
+            const dcc = await nextFromPool('cc:' + nm + '|' + th, function () { return searchCountry(nm, th); });
+            dcc.countryName = nm; dcc.topicKey = th;
+            return dcc;
+          }
           const dc = await nextFromPool('country:' + nm + '|' + cat[0], function () { return searchCountry(nm, cat[2]); });
           dc.countryName = nm;
           return dc;
+        }
+        if (src === 'custom') {
+          const th2 = pick(selectedCustom);
+          const dcu = await nextFromPool('custom:' + th2, function () { return searchCustom(th2); });
+          dcu.topicKey = th2;
+          return dcu;
         }
         if (src === 'wikipedia' && selected.length) {
           const key = pick(selected);
@@ -660,9 +984,11 @@
   }
   function gist(extract) {
     const sentences = splitSentences(cleanText(extract).replace(/\s+/g, ' '));
+    const lim = LEVEL === 'simple' ? 150 : LEVEL === 'detail' ? 360 : 220;
+    const minLen = LEVEL === 'simple' ? 0 : LEVEL === 'detail' ? 240 : 90;
     let out = sentences[0] || '';
-    if (out.length < 90 && sentences[1]) out += ' ' + sentences[1];
-    if (out.length > 220) out = out.slice(0, 217).replace(/\s+\S*$/, '') + '…';
+    for (let i = 1; i < sentences.length && i < 3 && out.length < minLen; i++) out += ' ' + sentences[i];
+    if (out.length > lim) out = out.slice(0, lim - 3).replace(/\s+\S*$/, '') + '…';
     return out;
   }
   // texte détaillé : paragraphes courts de 2 phrases, titres de parties, sans les notes et références
@@ -693,10 +1019,28 @@
     if (!el.firstChild) el.textContent = cleanText(raw);
   }
 
+  // version simplifiée : Vikidia, l'encyclopédie pour les jeunes lecteurs (quand l'article existe)
+  const simpleCache = {};
+  async function fetchSimple(title) {
+    if (!title) return null;
+    if (title in simpleCache) return simpleCache[title];
+    let out = null;
+    try {
+      const r = await fetch('https://fr.vikidia.org/w/api.php?action=query&format=json&origin=*&formatversion=2&redirects=1&prop=extracts&exintro=1&explaintext=1&titles=' + encodeURIComponent(title));
+      const j = await r.json();
+      const p = j.query && j.query.pages && j.query.pages[0];
+      if (p && !p.missing && p.extract && p.extract.length >= 80) out = p.extract.trim();
+    } catch (e) {}
+    simpleCache[title] = out;
+    return out;
+  }
+
   const longCache = {};
   async function fetchLong(d) {
-    if (longCache[d.pageid]) return longCache[d.pageid];
+    const ck = LEVEL + ':' + d.pageid;
+    if (longCache[ck]) return longCache[ck];
     let base = d.longText || '';
+    if (LEVEL === 'simple' && !base) { const sx = d.simple || await fetchSimple(d.title); if (sx) { base = sx; d.simple = sx; } }
     let wid = d.wid, host = d.host;
     if (!wid && typeof d.pageid === 'number') { wid = d.pageid; host = 'fr.wikipedia.org'; }
     if (!base && wid && host) {
@@ -709,7 +1053,7 @@
     }
     if (!base) base = d.extract || '';
     const out = (d.lead ? d.lead.trim() + '\n\n' : '') + base;
-    longCache[d.pageid] = out;
+    longCache[ck] = out;
     return out;
   }
 
@@ -766,6 +1110,13 @@
 
     const content = document.createElement('div');
     content.className = 'content';
+    if (d.topicKey || d.countryName) {
+      const tr = document.createElement('div');
+      tr.className = 'tagrow';
+      if (d.topicKey) { const a = document.createElement('span'); a.textContent = '🏷️ ' + d.topicKey; tr.appendChild(a); }
+      if (d.countryName) { const b = document.createElement('span'); b.textContent = '🌍 ' + d.countryName; tr.appendChild(b); }
+      content.appendChild(tr);
+    }
     const h2 = document.createElement('h2');
     h2.textContent = d.title;
     content.appendChild(h2);
@@ -781,8 +1132,11 @@
     content.appendChild(text);
     const srcLine = document.createElement('p');
     srcLine.className = 'src';
-    srcLine.textContent = 'Source : ' + (SRC_LABEL[d.source] || 'Wikipédia');
+    srcLine.textContent = '';
     content.appendChild(srcLine);
+    if (LEVEL === 'simple' && !d.lead) {
+      fetchSimple(d.title).then(function (ex) { if (ex) { d.simple = ex; text.textContent = gist(ex); srcLine.textContent = 'Version simplifiée'; } });
+    }
 
     const lg = document.createElement('div');
     lg.className = 'long';
@@ -799,6 +1153,7 @@
         lg.hidden = false;
         content.classList.add('reading');
         card.classList.add('reading');
+        document.body.classList.add('reading-open');
         mb.textContent = 'Réduire';
         if (!loadedLong) {
           lg.textContent = 'Chargement…';
@@ -809,6 +1164,7 @@
         lg.hidden = true;
         content.classList.remove('reading');
         card.classList.remove('reading');
+        document.body.classList.remove('reading-open');
         content.scrollTop = 0;
         mb.textContent = 'Lire plus';
       }
@@ -883,9 +1239,9 @@
   const observer = new IntersectionObserver(function (entries) {
     entries.forEach(function (en) {
       if (!en.isIntersecting) return;
+      document.body.classList.toggle('reading-open', en.target.classList.contains('reading'));
       const idx = +en.target.dataset.idx;
       if (en.target._d && !en.target.dataset.counted) { en.target.dataset.counted = '1'; track(en.target._d); }
-      if (idx >= 1) hint.classList.add('gone');
       if (idx >= cardCount - 3) loadMore(3);
     });
   }, { root: feed, threshold: 0.6 });
@@ -957,10 +1313,58 @@
   let draftSources = selectedSources.slice();
   let draftCountry = country;
   let draftCountryCats = countryCats.slice();
+  let draftCustom = selectedCustom.slice();
+  let suggestTimer = null;
 
   function updateFoot() {
-    const n = draft.length + draftSources.length + (draftCountry ? 1 : 0);
+    const n = draft.length + draftSources.length + draftCustom.length + (draftCountry ? 1 : 0);
     document.getElementById('applyTopics').textContent = n ? 'Voir les cartes (' + n + ')' : 'Voir les cartes (tout)';
+  }
+
+  function renderCustom() {
+    const mine = document.getElementById('customChips');
+    if (!mine) return;
+    mine.textContent = '';
+    draftCustom.forEach(function (t) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', 'true');
+      b.textContent = '🏷️ ' + t + '  ✕';
+      b.addEventListener('click', function () { draftCustom.splice(draftCustom.indexOf(t), 1); renderCustom(); updateFoot(); });
+      mine.appendChild(b);
+    });
+  }
+  function renderSuggestions(q, list) {
+    const box = document.getElementById('sugChips');
+    if (!box) return;
+    box.textContent = '';
+    if (!q) return;
+    const items = [q].concat(list.filter(function (t) { return t.toLowerCase() !== q.toLowerCase(); })).slice(0, 10);
+    items.forEach(function (t, i) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip';
+      b.textContent = (i === 0 ? '🔎 ' : '') + t;
+      b.setAttribute('aria-pressed', draftCustom.indexOf(t) >= 0 ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        const k = draftCustom.indexOf(t);
+        if (k >= 0) draftCustom.splice(k, 1); else if (draftCustom.length < 8) draftCustom.push(t); else toast('8 thèmes maximum');
+        b.setAttribute('aria-pressed', draftCustom.indexOf(t) >= 0 ? 'true' : 'false');
+        renderCustom(); updateFoot();
+      });
+      box.appendChild(b);
+    });
+  }
+  async function suggestFor(q) {
+    renderSuggestions(q, []);
+    try {
+      const first = await wikiSearch(q);
+      let titles = first.map(function (r) { return r.title; });
+      if (first.length) {
+        try { const more = await wikiSearch('morelike:' + first[0].title); titles = titles.concat(more.map(function (r) { return r.title; })); } catch (e) {}
+      }
+      const seen = {};
+      titles = titles.filter(function (t) { if (seen[t]) return false; seen[t] = 1; return true; });
+      if (searchEl.value.trim() === q) renderSuggestions(q, titles);
+    } catch (e) {}
   }
 
   function buildGroups() {
@@ -994,6 +1398,12 @@
       });
       return b;
     }
+    const sugBox = makeGroup('Mes thèmes recherchés', 'Tape un sujet dans la barre de recherche (par exemple « Première Guerre mondiale ») : des suggestions liées apparaissent ici. Choisis-en une ou plusieurs, puis appuie sur « Voir les cartes ».');
+    sugBox.dataset.keep = '1';
+    const mine = document.createElement('div'); mine.className = 'chips'; mine.id = 'customChips';
+    const sugs = document.createElement('div'); sugs.className = 'chips'; sugs.id = 'sugChips'; sugs.style.marginTop = '10px';
+    sugBox.append(mine, sugs);
+    renderCustom();
     const today = new Date();
     const dateLabel = today.getDate() + ' ' + MOIS[today.getMonth()];
 
@@ -1025,10 +1435,10 @@
     COUNTRY_CATS.forEach(function (c) { cchips.appendChild(toggleChip(c[1], draftCountryCats, c[0])); });
     cbox.append(sel, cchips);
 
-    const sbox = makeGroup('Sources', 'Toutes en français. Les thèmes ci-dessous sont cherchés dans Wikipédia.');
+    const sbox = makeGroup('Sources', 'Toutes les sources sont en français.');
     const schips = document.createElement('div');
     schips.className = 'chips';
-    schips.append(toggleChip('📖 Wikipédia', draftSources, 'wikipedia'), toggleChip('🧳 Wikivoyage', draftSources, 'voyage'));
+    schips.append(toggleChip('📖 Culture générale', draftSources, 'wikipedia'), toggleChip('🧳 Voyage', draftSources, 'voyage'));
     sbox.appendChild(schips);
     GROUPS.forEach(function (g) {
       const box = document.createElement('div');
@@ -1057,7 +1467,10 @@
   }
 
   searchEl.addEventListener('input', function () {
-    const q = searchEl.value.trim().toLowerCase();
+    const raw = searchEl.value.trim();
+    clearTimeout(suggestTimer);
+    if (raw.length >= 3) suggestTimer = setTimeout(function () { suggestFor(raw); }, 400); else renderSuggestions('', []);
+    const q = raw.toLowerCase();
     groupsEl.querySelectorAll('.group').forEach(function (box) {
       if (box.dataset.keep) return;
       let any = false;
@@ -1075,6 +1488,7 @@
     draftSources = selectedSources.slice();
     draftCountry = country;
     draftCountryCats = countryCats.slice();
+    draftCustom = selectedCustom.slice();
     searchEl.value = '';
     buildGroups();
     updateFoot();
@@ -1086,6 +1500,8 @@
     draftSources = [];
     draftCountry = '';
     draftCountryCats = [];
+    draftCustom = [];
+    renderCustom();
     const cs = document.getElementById('countrySelect');
     if (cs) cs.value = '';
     groupsEl.querySelectorAll('.chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
@@ -1094,18 +1510,24 @@
   document.getElementById('applyTopics').addEventListener('click', function () {
     const changed = draft.slice().sort().join('|') !== selected.slice().sort().join('|') ||
       draftSources.slice().sort().join('|') !== selectedSources.slice().sort().join('|') ||
-      draftCountry !== country || draftCountryCats.slice().sort().join('|') !== countryCats.slice().sort().join('|');
+      draftCountry !== country || draftCountryCats.slice().sort().join('|') !== countryCats.slice().sort().join('|') ||
+      draftCustom.slice().sort().join('|') !== selectedCustom.slice().sort().join('|');
     topicsPanel.classList.remove('open');
     if (!changed) return;
     selected = draft.slice();
     selectedSources = draftSources.slice();
     country = draftCountry;
     countryCats = draftCountryCats.slice();
+    selectedCustom = draftCustom.slice();
+    store('curio.custom', selectedCustom);
     store('curio.country', country);
     store('curio.countryCats', countryCats);
     store('curio.topics', selected);
     store('curio.sources', selectedSources);
     themesLabel();
+    rebuildFeed();
+  });
+  function rebuildFeed() {
     gen++;
     loading = false;
     observer.disconnect();
@@ -1117,9 +1539,8 @@
     l.id = 'loader';
     l.innerHTML = '<div><div class="big">Curio<i>.</i></div>Je cherche quelque chose à t\'apprendre…</div>';
     feed.appendChild(l);
-    hint.classList.remove('gone');
     loadMore(4);
-  });
+  }
 
   // --- profil, niveaux, prestiges, comptes et amis
   const AVATARS = ['🦊','🐼','🦉','🐯','🦁','🐙','🦄','🐢','🐧','🦋','🐬','🦅','🐺','🐸','🌍','🔭','📚','🎯','⚡','🌙','🚀','🌟','🧠','🎨'];
@@ -1128,7 +1549,7 @@
   const TITLES = [[1, 'Curieux'], [5, 'Explorateur'], [10, 'Voyageur'], [15, 'Passionné'], [20, 'Érudit'], [25, 'Savant'], [30, 'Maître']];
   const PRESTIGE_NAMES = ['Bronze', 'Argent', 'Or', 'Platine', 'Diamant', 'Légende'];
   const PCOL = ['#CD7F32', '#C9CED6', '#D4AF6A', '#7FD6DC', '#7AB8FF', '#FF7BE0'];
-  const SRC_SHORT = { wikipedia: 'Wikipédia', voyage: 'Wikivoyage', day: 'Ce jour dans l\'histoire', births: 'Nés ce jour-là' };
+  const SRC_SHORT = { wikipedia: 'Culture générale', voyage: 'Voyage', day: 'Ce jour dans l\'histoire', births: 'Nés ce jour-là' };
   const USER_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.9-4 4-6 7.5-6s6.6 2 7.5 6"/></svg>';
 
   const BADGES = [
@@ -1153,15 +1574,23 @@
     return { owner: null, name: '', avatar: '', avatarColor: '', avatarUrl: '', goal: 10, xp: 0, cycleBase: 0, prestige: 0, seen: 0, read: 0, days: {}, bySource: {}, byTopic: {}, byCountry: {}, badges: {} };
   }
   let profile = Object.assign(newProfile(), load('curio.profile', {}));
+  if (!profile.name) { profile.name = META.name || ''; profile.avatar = profile.avatar || META.avatar || ''; profile.avatarColor = profile.avatarColor || META.color || ''; if (META.photo) profile.avatarUrl = META.photo; }
   let editingProfile = false;
 
-  function saveProfile() { store('curio.profile', profile); }
+  function saveMeta() {
+    try {
+      const list = JSON.parse(localStorage.getItem('curio.profiles') || '[]');
+      const m = list.filter(function (x) { return x.id === UID; })[0];
+      if (m) { m.name = profile.name || m.name; m.avatar = profile.avatar || m.avatar; m.color = profile.avatarColor || m.color; m.photo = profile.avatarUrl || ''; m.level = LEVEL; m.age = META.age; localStorage.setItem('curio.profiles', JSON.stringify(list)); }
+    } catch (e) {}
+  }
+  function saveProfile() { store('curio.profile', profile); saveMeta(); }
   function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function safeUrl(u) { return (typeof u === 'string' && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(u) && u.length < 120000) ? u : ''; }
 
   // --- niveaux et prestiges
-  function needXp(n) { return Math.round(15 * Math.pow(n - 1, 1.5)); }
+  function needXp(n) { return Math.round(40 * Math.pow(n - 1, 1.6)); }
   function titleFor(n) { let t = TITLES[0][1]; TITLES.forEach(function (x) { if (n >= x[0]) t = x[1]; }); return t; }
   function prestigeName(p) { if (p <= 0) return ''; return p <= PRESTIGE_NAMES.length ? PRESTIGE_NAMES[p - 1] : 'Légende ' + (p - PRESTIGE_NAMES.length + 1); }
   function prestigeColor(p) { return PCOL[Math.min(Math.max(p, 1), PCOL.length) - 1]; }
@@ -1233,7 +1662,7 @@
   }
 
   function checkBadges() {
-    const c = { best: streakInfo().best, saved: Object.keys(saved).length, dom: (typeof domainCounts === 'function') ? domainCounts() : {}, mastered: (typeof study !== 'undefined') && study.badges.some(function (b) { return !!b.diamant; }) };
+    const c = { friends: (typeof friends !== 'undefined' ? friends.length : 0), best: streakInfo().best, saved: Object.keys(saved).length, dom: (typeof domainCounts === 'function') ? domainCounts() : {}, mastered: (typeof study !== 'undefined') && study.badges.some(function (b) { return !!b.diamant; }) };
     BADGES.forEach(function (b) {
       if (!profile.badges[b[0]] && b[4](profile, c)) {
         profile.badges[b[0]] = dayKey(new Date());
@@ -1258,7 +1687,7 @@
     bump(profile.bySource, d.source);
     bump(profile.byTopic, d.topicKey);
     bump(profile.byCountry, d.countryName);
-    if (profile.days[k] === (profile.goal || 10)) { profile.xp += gain(20); toast('🎯 Objectif du jour atteint ! +' + gain(20) + ' points'); }
+    if (profile.days[k] === (profile.goal || 10)) { profile.xp += gain(40); toast('🎯 Objectif du jour atteint ! +' + gain(40) + ' points'); }
     afterXp(before);
     checkBadges();
     saveProfile();
@@ -1270,7 +1699,7 @@
     card.dataset.read = '1';
     const before = levelInfo(profile.xp, profile.cycleBase).n;
     profile.read++;
-    profile.xp += gain(3);
+    profile.xp += gain(4);
     afterXp(before);
     checkBadges();
     saveProfile();
@@ -1481,7 +1910,7 @@
     ring.appendChild(el('div', 'num', Math.min(today, 99) + '/' + goal));
     gr.appendChild(ring);
     const txt = el('div', 'txt');
-    txt.appendChild(document.createTextNode(today >= goal ? 'Objectif atteint, bravo ! ' : 'Encore ' + (goal - today) + ' carte' + (goal - today > 1 ? 's' : '') + ' pour atteindre ton objectif (+20 points). '));
+    txt.appendChild(document.createTextNode(today >= goal ? 'Objectif atteint, bravo ! ' : 'Encore ' + (goal - today) + ' carte' + (goal - today > 1 ? 's' : '') + ' pour atteindre ton objectif (+40 points). '));
     txt.appendChild(el('b', null, '🔥 ' + st.cur + ' jour' + (st.cur > 1 ? 's' : '') + ' de suite'));
     const chips = el('div', 'gchips');
     [5, 10, 20, 30].forEach(function (n) {
@@ -1500,6 +1929,8 @@
       const tile = el('div', 'tile'); tile.appendChild(el('div', 'v', String(t[0]))); tile.appendChild(el('div', 'l', t[1])); tiles.appendChild(tile);
     });
     body.appendChild(tiles);
+
+    body.appendChild(friendsCard());
 
     // 7 derniers jours
     const wk = el('div', 'pcard');
@@ -1545,34 +1976,110 @@
     body.appendChild(rankBlock('Tes thèmes préférés', 'Choisis des thèmes pour les voir apparaître ici.', topList(profile.byTopic, 6)));
     body.appendChild(rankBlock('Pays explorés · ' + Object.keys(profile.byCountry).length, 'Choisis un pays dans le menu pour l\'explorer.', topList(profile.byCountry, 8)));
 
+    // réglages : niveau d'explication, âge, profils
+    const LVL_OPTS = [['simple', 'Simple', 'Les mêmes explications, en mots plus simples (version pour jeunes lecteurs quand elle existe)'], ['normal', 'Normal', 'Les textes de référence'], ['detail', 'Détaillé', 'Plus de précisions dès la première lecture']];
+    const AGE_OPTS = [['kid', 'Moins de 12 ans'], ['teen', '12 à 15 ans'], ['young', '16 à 25 ans'], ['adult', '26 ans et plus']];
+    const stg = el('div', 'pcard pform');
+    stg.appendChild(el('h3', null, '⚙️ Réglages'));
+    stg.appendChild(el('p', 'sub', 'Niveau d\'explication : le sujet reste le même, seule la façon de l\'expliquer change.'));
+    const lvl = el('div', 'lvl');
+    LVL_OPTS.forEach(function (x) {
+      const b = el('button', 'lopt'); b.type = 'button'; b.setAttribute('aria-pressed', LEVEL === x[0] ? 'true' : 'false');
+      b.appendChild(el('b', null, x[1])); b.appendChild(el('span', null, x[2]));
+      b.addEventListener('click', function () {
+        if (LEVEL === x[0]) return;
+        LEVEL = x[0]; META.level = x[0]; saveMeta();
+        toast('Niveau « ' + x[1] + ' » appliqué');
+        renderProfile();
+        rebuildFeed();
+      });
+      lvl.appendChild(b);
+    });
+    stg.appendChild(lvl);
+    stg.appendChild(el('p', 'sub', 'Mon âge'));
+    const ages = el('div', 'chips');
+    AGE_OPTS.forEach(function (x) {
+      const b = el('button', 'chip', x[1]); b.type = 'button'; b.setAttribute('aria-pressed', META.age === x[0] ? 'true' : 'false');
+      b.addEventListener('click', function () { META.age = x[0]; saveMeta(); renderProfile(); });
+      ages.appendChild(b);
+    });
+    stg.appendChild(ages);
+    const sr = el('div', 'prow');
+    const sw = el('button', 'pbtn ghost', 'Changer de profil'); sw.type = 'button';
+    sw.addEventListener('click', function () { try { sessionStorage.removeItem('curio.chosen'); } catch (e) {} location.reload(); });
+    const dl = el('button', 'pbtn danger', 'Supprimer ce profil'); dl.type = 'button';
+    dl.addEventListener('click', function () {
+      if (!confirm('Supprimer ce profil et toute sa progression, ses cours et ses cartes ? Cette action est définitive.')) return;
+      try {
+        const list = JSON.parse(localStorage.getItem('curio.profiles') || '[]').filter(function (x) { return x.id !== UID; });
+        localStorage.setItem('curio.profiles', JSON.stringify(list));
+        PKEYS.forEach(function (k) { localStorage.removeItem(nk(k)); });
+        sessionStorage.removeItem('curio.chosen');
+      } catch (e) {}
+      location.reload();
+    });
+    sr.append(sw, dl);
+    stg.appendChild(sr);
+    const cr = document.createElement('details'); cr.className = 'credits';
+    const crs = document.createElement('summary'); crs.textContent = 'Crédits et licences';
+    cr.appendChild(crs);
+    cr.appendChild(el('p', 'sub', 'Les textes et les images des cartes et des cours proviennent de projets de la fondation Wikimédia (encyclopédie et guide de voyage) et de Vikidia. Ils sont publiés sous licence libre CC BY-SA, qui demande de citer leur origine : c\'est le but de cette mention.'));
+    stg.appendChild(cr);
+    body.appendChild(stg);
+
     // sauvegarde manuelle
     const bk = el('div', 'pcard pform');
-    bk.appendChild(el('h3', null, 'Sauvegarde manuelle'));
-    bk.appendChild(el('p', 'sub', 'Ta progression est enregistrée sur ce téléphone. Pour la garder ou la retrouver ailleurs, copie ton code puis colle-le là-bas.'));
-    const ta = el('textarea'); ta.setAttribute('aria-label', 'Code de sauvegarde'); ta.placeholder = 'Colle ici un code pour restaurer un profil';
+    bk.appendChild(el('h3', null, '📲 Changer de téléphone et sauvegarde'));
+    bk.appendChild(el('p', 'sub', 'Tout reste sur ce téléphone. Pour retrouver ton profil sur un autre téléphone : copie ton code de transfert ici, puis, sur l\'autre téléphone, choisis « J\'ai déjà un profil » à l\'écran de démarrage et colle-le.'));
+    const ta = el('textarea'); ta.setAttribute('aria-label', 'Code de transfert'); ta.placeholder = 'Ton code de transfert apparaît ici. Tu peux aussi coller un code à importer.';
     bk.appendChild(ta);
+    const info = el('p', 'sub', '');
+    async function makeCode(light) {
+      saveProfile(); saveStudy();
+      const code = await XFER.pack(XFER.build(UID, light));
+      ta.value = code;
+      info.textContent = 'Code de ' + Math.round(code.length / 1000) + ' Ko' + (code.length > 60000 ? ' : long pour certaines messageries (WhatsApp coupe vers 65 000 caractères). Utilise le code léger ou le fichier.' : '.');
+      return code;
+    }
     const br = el('div', 'prow');
-    const cp = el('button', 'pbtn', 'Copier mon code'); cp.type = 'button';
-    cp.addEventListener('click', function () {
-      const data = Object.assign({}, profile); delete data.owner; delete data.avatarUrl;
-      const code = 'CURIO1:' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-      ta.value = code; ta.select();
-      try { if (navigator.clipboard) navigator.clipboard.writeText(code); toast('Code copié'); } catch (e) { toast('Sélectionne et copie le code'); }
+    const cp = el('button', 'pbtn', 'Copier mon code de transfert'); cp.type = 'button';
+    cp.addEventListener('click', async function () {
+      const code = await makeCode(false);
+      try { await navigator.clipboard.writeText(code); toast('Code copié'); } catch (e) { ta.select(); toast('Sélectionne et copie le code'); }
     });
-    const rs = el('button', 'pbtn ghost', 'Restaurer'); rs.type = 'button';
-    rs.addEventListener('click', function () {
-      const v = ta.value.trim();
-      try {
-        if (v.indexOf('CURIO1:') !== 0) throw new Error('format');
-        const o = JSON.parse(decodeURIComponent(escape(atob(v.slice(7)))));
-        if (!o || typeof o !== 'object' || typeof o.xp !== 'number' || typeof o.days !== 'object') throw new Error('format');
-        const keep = { avatarUrl: profile.avatarUrl, name: o.name || profile.name };
-        profile = Object.assign(newProfile(), o, keep);
-        saveProfile(); updateProfileBtn(); renderProfile(); toast('Profil restauré');
-      } catch (e) { toast('Ce code n\'est pas valide'); }
+    const sh = el('button', 'pbtn ghost', 'Envoyer'); sh.type = 'button';
+    sh.addEventListener('click', async function () {
+      const code = await makeCode(false);
+      try { if (navigator.share) { await navigator.share({ title: 'Mon profil Curio', text: code }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+      try { await navigator.clipboard.writeText(code); toast('Code copié'); } catch (e) { ta.select(); }
     });
-    br.append(cp, rs);
+    const lt = el('button', 'pbtn ghost', 'Code léger (sans les cours)'); lt.type = 'button';
+    lt.addEventListener('click', async function () {
+      const code = await makeCode(true);
+      try { await navigator.clipboard.writeText(code); toast('Code léger copié'); } catch (e) { ta.select(); }
+    });
+    br.append(cp, sh, lt);
     bk.appendChild(br);
+    bk.appendChild(info);
+    const ir = el('div', 'prow');
+    const rs = el('button', 'pbtn ghost', 'Importer le code collé'); rs.type = 'button';
+    rs.addEventListener('click', async function () {
+      if (!ta.value.trim()) { toast('Colle d\'abord un code'); return; }
+      try { await importCode(ta.value); } catch (e) { toast('Ce code n\'est pas valide'); }
+    });
+    ir.appendChild(rs);
+    bk.appendChild(ir);
+    const fr = el('div', 'prow');
+    const ex = el('button', 'pbtn', 'Exporter mes données (fichier)'); ex.type = 'button';
+    ex.addEventListener('click', exportData);
+    const fileIn = el('input'); fileIn.type = 'file'; fileIn.accept = '.json,application/json'; fileIn.hidden = true;
+    fileIn.addEventListener('change', function () { if (fileIn.files && fileIn.files[0]) importData(fileIn.files[0]); });
+    const im = el('button', 'pbtn ghost', 'Importer un fichier'); im.type = 'button';
+    im.addEventListener('click', function () { fileIn.click(); });
+    fr.append(ex, im, fileIn);
+    bk.appendChild(el('p', 'sub', 'Le fichier garde tout : progression, cours, cartes, notes, réglages, amis. ' + (profile.lastBackup ? 'Dernière sauvegarde : ' + profile.lastBackup.split('-').reverse().join('/') + '.' : 'Pas encore sauvegardé : fais-le de temps en temps.')));
+    bk.appendChild(fr);
+
     {
       const rsAll = el('div', 'prow');
       const wipe = el('button', 'pbtn danger', 'Effacer ma progression'); wipe.type = 'button';
@@ -1584,6 +2091,161 @@
       bk.appendChild(rsAll);
     }
     body.appendChild(bk);
+  }
+
+  // ---- amis par code : aucun serveur, on s'échange un petit code ----
+  BADGES.push(
+    ['f1', '🤝', 'Premier ami', 'Ajouter un ami', function (p, c) { return c.friends >= 1; }],
+    ['f5', '🎉', 'Cercle d\'amis', 'Avoir 5 amis', function (p, c) { return c.friends >= 5; }]
+  );
+  function friendId() {
+    if (!profile.fid) { profile.fid = 'f' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); saveProfile(); }
+    return profile.fid;
+  }
+  function lastActiveKey() {
+    const ks = Object.keys(profile.days).filter(function (k) { return profile.days[k] > 0; }).sort();
+    return ks.length ? ks[ks.length - 1] : null;
+  }
+  function myFriendCard() {
+    const st = streakInfo();
+    return { f: friendId(), n: profile.name || 'Moi', a: profile.avatar || '🦊', c: /^#[0-9a-fA-F]{6}$/.test(profile.avatarColor || '') ? profile.avatarColor : '#D4AF6A',
+      x: Math.round(profile.xp || 0), cb: profile.cycleBase || 0, p: profile.prestige || 0, s: st.cur, la: lastActiveKey(), b: Object.keys(profile.badges).length, d: dayKey(new Date()) };
+  }
+  function friendCode() { return 'AMI1:' + btoa(unescape(encodeURIComponent(JSON.stringify(myFriendCard())))); }
+  function parseFriendCode(text) {
+    const m = /AMI1:([A-Za-z0-9+\/=]+)/.exec(String(text).replace(/\s+/g, ''));
+    if (!m) throw new Error('format');
+    const o = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    const num = function (v, max) { v = Number(v); return isFinite(v) && v >= 0 && v <= max ? Math.round(v) : 0; };
+    const dte = function (v) { return /^\d{4}-\d{2}-\d{2}$/.test(v || '') ? v : null; };
+    if (!o || typeof o.f !== 'string' || typeof o.n !== 'string' || !o.n.trim()) throw new Error('format');
+    return { f: o.f.slice(0, 24), n: o.n.trim().slice(0, 20), a: String(o.a || '🙂').slice(0, 8), c: /^#[0-9a-fA-F]{6}$/.test(o.c || '') ? o.c : '#D4AF6A',
+      x: num(o.x, 1e8), cb: num(o.cb, 1e8), p: num(o.p, 1000), s: num(o.s, 10000), la: dte(o.la), b: num(o.b, 1000), d: dte(o.d) || dayKey(new Date()) };
+  }
+  function addFriend(text) {
+    const f = parseFriendCode(text);
+    if (f.f === friendId()) return 'self';
+    const i = friends.findIndex(function (x) { return x.f === f.f; });
+    if (i >= 0) { friends[i] = f; store('curio.friends', friends); return 'updated'; }
+    if (friends.length >= 50) return 'full';
+    friends.push(f);
+    store('curio.friends', friends);
+    checkBadges(); saveProfile();
+    return 'added';
+  }
+  function daysSince(key) { return Math.max(0, Math.round((new Date(dayKey(new Date()) + 'T12:00:00') - new Date(key + 'T12:00:00')) / 86400000)); }
+
+  function friendsCard() {
+    const card = el('div', 'pcard pform');
+    card.appendChild(el('h3', null, '👥 Amis et classement'));
+    card.appendChild(el('p', 'sub', 'Envoie ton code ami à un ami et colle le sien ici. Il n\'y a pas de serveur : le niveau d\'un ami se met à jour quand il te renvoie un nouveau code.'));
+    const r1 = el('div', 'prow');
+    const copy = el('button', 'pbtn', 'Copier mon code ami'); copy.type = 'button';
+    copy.addEventListener('click', function () { try { navigator.clipboard.writeText(friendCode()); toast('Code ami copié'); } catch (e) { toast('Copie impossible'); } });
+    const sh = el('button', 'pbtn ghost', 'Envoyer'); sh.type = 'button';
+    sh.addEventListener('click', async function () {
+      const text = 'Ajoute-moi sur Curio ! Dans mon profil, rubrique Amis, colle ce code :\n' + friendCode();
+      try { if (navigator.share) { await navigator.share({ title: 'Mon code ami Curio', text: text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+      try { navigator.clipboard.writeText(text); toast('Message copié'); } catch (e) { toast('Copie impossible'); }
+    });
+    r1.append(copy, sh);
+    card.appendChild(r1);
+    const addRow = el('div', 'addrow');
+    const inp = el('input'); inp.type = 'text'; inp.placeholder = 'Colle le code ami ici'; inp.setAttribute('aria-label', 'Code ami'); inp.setAttribute('autocapitalize', 'off');
+    const add = el('button', 'pbtn', 'Ajouter'); add.type = 'button';
+    function doAdd() {
+      const v = inp.value.trim();
+      if (!v) { inp.focus(); return; }
+      try {
+        const r = addFriend(v);
+        toast({ added: 'Ami ajouté !', updated: 'Ami mis à jour', self: 'C\'est ton propre code !', full: '50 amis maximum' }[r]);
+        if (r === 'added' || r === 'updated') renderProfile();
+      } catch (e) { toast('Ce code ami n\'est pas valide'); }
+    }
+    add.addEventListener('click', doAdd);
+    inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') doAdd(); });
+    addRow.append(inp, add);
+    card.appendChild(addRow);
+
+    card.appendChild(el('h4', null, 'Classement'));
+    const me = Object.assign(myFriendCard(), { me: true });
+    const board = friends.map(function (x) { return Object.assign({}, x); }).concat([me]);
+    board.forEach(function (x) { x._lv = levelInfo(x.x, x.cb); x._score = (x.p || 0) * 1e9 + x._lv.cur; });
+    board.sort(function (a, b) { return b._score - a._score; });
+    if (board.length === 1) card.appendChild(el('p', 'sub', 'Ajoute un ami avec son code pour comparer vos niveaux.'));
+    board.forEach(function (x, i) {
+      const row = el('div', 'frow' + (x.me ? ' me' : ''));
+      row.appendChild(el('span', 'rk', i < 3 ? ['🥇', '🥈', '🥉'][i] : String(i + 1)));
+      row.appendChild(avatarFrom({ url: x.me ? profile.avatarUrl : '', emoji: x.a, color: x.c }, 40, x.p || 0));
+      const tx = el('div', 'ft');
+      tx.appendChild(el('b', null, x.n));
+      let fresh = '';
+      if (!x.me) { const n = daysSince(x.d); fresh = ' · mis à jour ' + (n === 0 ? 'aujourd\'hui' : n === 1 ? 'hier' : 'il y a ' + n + ' j'); }
+      tx.appendChild(el('span', null, 'Niv. ' + x._lv.n + ' ' + x._lv.name + (x.p ? ' · ✦ ' + prestigeName(x.p) : '') + (x.s ? ' · 🔥 ' + x.s : '') + fresh));
+      row.appendChild(tx);
+      if (!x.me) {
+        const rm = el('button', 'sm ghost', '✕'); rm.type = 'button'; rm.setAttribute('aria-label', 'Retirer cet ami');
+        rm.addEventListener('click', function () {
+          if (!confirm('Retirer ' + x.n + ' de tes amis ?')) return;
+          friends = friends.filter(function (y) { return y.f !== x.f; });
+          store('curio.friends', friends); renderProfile();
+        });
+        row.appendChild(rm);
+      }
+      card.appendChild(row);
+    });
+    return card;
+  }
+
+  // ---- code de transfert vers un autre téléphone ----
+  const XFER = window.CURIO_XFER;
+  async function importCode(text) {
+    const t = String(text).trim();
+    if (t.indexOf('CURIO1:') === 0) {
+      const o = JSON.parse(decodeURIComponent(escape(atob(t.slice(7)))));
+      if (!o || typeof o !== 'object' || typeof o.xp !== 'number' || typeof o.days !== 'object') throw new Error('format');
+      profile = Object.assign(newProfile(), o, { avatarUrl: profile.avatarUrl, name: o.name || profile.name });
+      saveProfile(); updateProfileBtn(); renderProfile(); toast('Profil restauré');
+      return;
+    }
+    const o = await XFER.unpack(t);
+    if (!confirm('Remplacer les données de ce profil par celles du code (' + ((o.meta && o.meta.name) || 'sans nom') + ') ?')) return;
+    PKEYS.forEach(function (k) { const key = k.slice(6); if (o.data[key] !== undefined) localStorage.setItem(nk(k), JSON.stringify(o.data[key])); });
+    toast('Données restaurées');
+    setTimeout(function () { location.reload(); }, 700);
+  }
+
+  // ---- sauvegarde complète d'un profil (fichier) ----
+  async function exportData() {
+    const data = {};
+    PKEYS.forEach(function (k) { const v = localStorage.getItem(nk(k)); if (v !== null) { try { data[k.slice(6)] = JSON.parse(v); } catch (e) {} } });
+    const out = { app: 'curio', v: 1, exported: new Date().toISOString(), meta: { name: profile.name, avatar: profile.avatar, color: profile.avatarColor, photo: profile.avatarUrl || '', level: LEVEL, age: META.age }, data: data };
+    const name = 'curio-' + (profile.name || 'profil').replace(/[^\w-]+/g, '_') + '.json';
+    const file = new File([JSON.stringify(out)], name, { type: 'application/json' });
+    profile.lastBackup = dayKey(new Date());
+    saveProfile();
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Sauvegarde Curio' }); renderProfile(); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('Fichier de sauvegarde créé');
+    renderProfile();
+  }
+  function importData(file) {
+    const rd = new FileReader();
+    rd.onload = function () {
+      try {
+        const o = JSON.parse(rd.result);
+        if (!o || o.app !== 'curio' || !o.data || typeof o.data !== 'object') throw new Error('format');
+        if (!confirm('Remplacer les données de ce profil par celles du fichier (' + ((o.meta && o.meta.name) || 'sans nom') + ') ?')) return;
+        PKEYS.forEach(function (k) { const key = k.slice(6); if (o.data[key] !== undefined) localStorage.setItem(nk(k), JSON.stringify(o.data[key])); });
+        toast('Données restaurées');
+        setTimeout(function () { location.reload(); }, 700);
+      } catch (e) { toast('Ce fichier n\'est pas une sauvegarde Curio'); }
+    };
+    rd.readAsText(file);
   }
 
   const profilePanel = document.getElementById('profilePanel');
@@ -1644,7 +2306,7 @@
   if (!Array.isArray(study.deck)) study.deck = [];
   const DECK = { id: 'deck', title: 'Mes cartes sauvegardées' };
   if (!study.stats || !study.stats.days) study.stats = { days: {} };
-  function saveStudy() { try { localStorage.setItem('curio.study', JSON.stringify(study)); return true; } catch (e) { toast('Stockage plein : supprime un cours'); return false; } }
+  function saveStudy() { try { localStorage.setItem(nk('curio.study'), JSON.stringify(study)); return true; } catch (e) { toast('Stockage plein : supprime un cours'); return false; } }
   function todayKey() { return dayKey(new Date()); }
   function addDays(key, n) { const d = new Date(key + 'T12:00:00'); d.setDate(d.getDate() + n); return dayKey(d); }
 
@@ -1847,7 +2509,7 @@
     return added.length;
   }
   function newCourse(art) {
-    const c = { id: 'c' + Date.now().toString(36), title: art.title, desc: art.desc || '', thumb: art.thumb || '', created: todayKey(), modules: [], lessons: [], cards: [], tests: {}, exam: null, diploma: '', completed: '', articles: [art.title] };
+    const c = { id: 'c' + Date.now().toString(36), src: art.src || 'Wikipédia', title: art.title, desc: art.desc || '', thumb: art.thumb || '', created: todayKey(), modules: [], lessons: [], cards: [], tests: {}, exam: null, diploma: '', completed: '', articles: [art.title] };
     ensureModel(c);
     if (!addArticleToCourse(c, art)) return null;
     return c;
@@ -1864,7 +2526,18 @@
       .map(function (p) { return { title: p.title, desc: p.description || '', thumb: p.thumbnail ? p.thumbnail.source : '', len: p.length || 0 }; });
   }
   function sizeLabel(len) { return len > 90000 ? 'Cours très complet' : len > 35000 ? 'Cours complet' : len > 12000 ? 'Cours moyen' : 'Cours court'; }
+  async function fetchVikidiaArticle(title) {
+    try {
+      const url = 'https://fr.vikidia.org/w/api.php?action=query&format=json&origin=*&formatversion=2&redirects=1&titles=' + encodeURIComponent(title) + '&prop=extracts&explaintext=1&exsectionformat=wiki';
+      const r = await fetch(url);
+      const j = await r.json();
+      const p = j.query && j.query.pages && j.query.pages[0];
+      if (p && !p.missing && p.extract && p.extract.length >= 2500) return { title: title, desc: '', text: p.extract, thumb: '', src: 'Vikidia' };
+    } catch (e) {}
+    return null;
+  }
   async function fetchArticle(title) {
+    if (LEVEL === 'simple') { const v = await fetchVikidiaArticle(title); if (v) return v; }
     const url = WIKI + '?action=query&format=json&origin=*&formatversion=2&redirects=1&titles=' + encodeURIComponent(title) +
       '&prop=extracts|pageimages|description&explaintext=1&exsectionformat=wiki&piprop=thumbnail&pithumbsize=600';
     const r = await fetch(url);
@@ -1915,11 +2588,11 @@
   }
   function badgeEntry(c) {
     let b = study.badges.find(function (x) { return x.cid === c.id; });
-    if (!b) { b = { cid: c.id, title: c.title, emblem: c.emblem, domain: c.domain, bronze: '', or: '', diamant: '', score: null, chap: 0, chapTotal: 0 }; study.badges.push(b); }
+    if (!b) { b = { cid: c.id, title: c.title, emblem: c.emblem, domain: c.domain, thumb: c.thumb || '', bronze: '', or: '', diamant: '', score: null, chap: 0, chapTotal: 0 }; study.badges.push(b); }
     return b;
   }
   function chapOk(c) { return c.modules.filter(function (m, mi) { return c.tests[mi] != null && c.tests[mi] >= PASS_TEST; }).length; }
-  function syncBadge(c) { const b = study.badges.find(function (x) { return x.cid === c.id; }); if (b) { b.chap = chapOk(c); b.chapTotal = c.modules.length; b.emblem = c.emblem; } return b; }
+  function syncBadge(c) { const b = study.badges.find(function (x) { return x.cid === c.id; }); if (b) { b.chap = chapOk(c); b.chapTotal = c.modules.length; b.emblem = c.emblem; if (c.thumb) b.thumb = c.thumb; } return b; }
   function awardTier(c, tier, score) {
     const b = badgeEntry(c);
     if (b[tier]) return false;
@@ -1931,7 +2604,7 @@
     return true;
   }
   function checkMastery(c) {
-    if (c.diploma && !c.mastered && mastery(c) >= 80) { c.mastered = todayKey(); awardTier(c, 'diamant', null); studyCredit(30, 0); return true; }
+    if (c.diploma && !c.mastered && mastery(c) >= 80) { c.mastered = todayKey(); awardTier(c, 'diamant', null); studyCredit(80, 0); return true; }
     return false;
   }
   function domainCounts() {
@@ -1947,7 +2620,7 @@
   function topTierColor(b) { let col = 'rgba(255,255,255,.2)'; TIERS.forEach(function (t) { if (b && b[t[0]]) col = t[3]; }); return col; }
   function badgeCard(c, b) {
     const card = el('div', 'bcard' + (b && (b.bronze || b.or || b.diamant) ? ' on' : ''));
-    const ring = el('div', 'bring', (b && b.emblem) || (c && c.emblem) || '📚');
+    const ring = ringEl((b && b.thumb) || (c && c.thumb), (b && b.emblem) || (c && c.emblem), false);
     ring.style.borderColor = topTierColor(b);
     card.appendChild(ring);
     card.appendChild(el('b', null, (b && b.title) || c.title));
@@ -1969,7 +2642,7 @@
       const had = profile.days[k] || 0;
       profile.days[k] = had + count;
       const g = profile.goal || 10;
-      if (had < g && had + count >= g) { profile.xp += gain(20); toast('🎯 Objectif du jour atteint ! +' + gain(20) + ' points'); }
+      if (had < g && had + count >= g) { profile.xp += gain(40); toast('🎯 Objectif du jour atteint ! +' + gain(40) + ' points'); }
     }
     afterXp(before);
     checkBadges();
@@ -2087,12 +2760,53 @@
   function backBtn(label, fn) { const b = el('button', 'back', '‹ ' + label); b.type = 'button'; b.addEventListener('click', fn); return b; }
   function pbtn(label, cls, fn) { const b = el('button', 'pbtn' + (cls ? ' ' + cls : ''), label); b.type = 'button'; b.addEventListener('click', fn); return b; }
   function paragraphs(text, cls) { const w = el('div'); text.split('\n\n').forEach(function (p) { w.appendChild(el('p', cls, p)); }); return w; }
-  function coverEl(title, thumb) { const cv = el('div', 'cover'); const th = safeThumb(thumb); if (th) cv.style.backgroundImage = 'url("' + th + '")'; else cv.textContent = title.charAt(0); return cv; }
+  function coverEl(title, thumb, emblem, desc) {
+    const cv = el('div', 'cover');
+    const th = safeThumb(thumb);
+    if (th) cv.style.backgroundImage = 'url("' + th + '")';
+    else {
+      const h = hashOf(title) % 360;
+      cv.style.background = 'linear-gradient(145deg, hsl(' + h + ' 45% 30%), hsl(' + ((h + 50) % 360) + ' 50% 14%))';
+      cv.style.color = '#fff';
+      cv.textContent = emblem || emblemFor(title + ' ' + (desc || ''), domainFor(title + ' ' + (desc || '')));
+    }
+    return cv;
+  }
+  async function fetchAnyThumb(title) {
+    try {
+      const url = WIKI + '?action=query&format=json&origin=*&formatversion=2&generator=search&gsrnamespace=0&gsrlimit=6&gsrsearch=' + encodeURIComponent(title) + '&prop=pageimages&piprop=thumbnail&pithumbsize=500';
+      const r = await fetch(url);
+      const j = await r.json();
+      const pages = ((j.query && j.query.pages) || []).slice().sort(function (a, b) { return a.index - b.index; });
+      for (let i = 0; i < pages.length; i++) { if (pages[i].thumbnail && safeThumb(pages[i].thumbnail.source)) return pages[i].thumbnail.source; }
+    } catch (e) {}
+    return '';
+  }
+  const thumbTried = new Set();
+  function lazyThumb(c) {
+    if (safeThumb(c.thumb) || thumbTried.has(c.id)) return;
+    thumbTried.add(c.id);
+    fetchAnyThumb(c.title).then(function (u) {
+      if (!u) return;
+      c.thumb = u;
+      const b = study.badges.find(function (x) { return x.cid === c.id; });
+      if (b) b.thumb = u;
+      saveStudy();
+      if (studyPanel.classList.contains('open') && (sv.view === 'home' || sv.view === 'course')) renderStudy();
+    });
+  }
+  function ringEl(thumb, emblem, big) {
+    const ring = el('div', 'bring' + (big ? ' big' : ''));
+    const th = safeThumb(thumb);
+    if (th) { ring.classList.add('photo'); ring.style.backgroundImage = 'url("' + th + '")'; ring.appendChild(el('span', 'em', emblem || '📚')); }
+    else ring.textContent = emblem || '📚';
+    return ring;
+  }
   function progressBar(pct) { const bar = el('div', 'xpbar'); const f = el('i'); f.style.width = Math.max(0, Math.min(100, pct)) + '%'; bar.appendChild(f); return bar; }
 
   function renderStudy() {
     studyBody.textContent = '';
-    ({ home: viewHome, nw: viewNew, course: viewCourse, lesson: viewLesson, session: viewSession, summary: viewSummary, timeline: viewTimeline })[sv.view](studyBody);
+    ({ home: viewHome, nw: viewNew, course: viewCourse, lesson: viewLesson, session: viewSession, summary: viewSummary, timeline: viewTimeline, pays: viewPays, hub: viewHub })[sv.view](studyBody);
     updateStudyBadge();
   }
 
@@ -2136,13 +2850,14 @@
     body.appendChild(el('h4', null, 'Mes cours'));
     if (!study.courses.length) body.appendChild(el('p', 'sub', 'Tape un sujet (par exemple « Révolution française » ou « Système immunitaire ») : Curio construit un vrai cours avec des chapitres, des leçons, des QCM et un examen final.'));
     study.courses.forEach(function (c) {
+      lazyThumb(c);
       const card = el('button', 'crs'); card.type = 'button';
       const tx = el('div', 'ct');
       tx.appendChild(el('b', null, (c.emblem || '📚') + ' ' + c.title + (c.mastered ? ' 💎' : c.diploma ? ' 🏅' : c.completed ? ' 🥉' : '')));
       const d = lessonsDone(c);
       tx.appendChild(el('span', null, d + '/' + c.lessons.length + ' leçons · Maîtrise ' + mastery(c) + ' %'));
       tx.appendChild(progressBar(Math.round(d / c.lessons.length * 100)));
-      card.append(coverEl(c.title, c.thumb), tx);
+      card.append(coverEl(c.title, c.thumb, c.emblem), tx);
       card.addEventListener('click', function () { go('course', { cid: c.id, related: null }); });
       body.appendChild(card);
     });
@@ -2150,6 +2865,12 @@
     if (lastDone) body.appendChild(suggestCard(lastDone));
     body.appendChild(el('div', 'gap'));
     body.appendChild(pbtn('+ Nouveau cours', '', function () { go('nw', { q: '', res: null, msg: '' }); }));
+    body.appendChild(el('div', 'gap'));
+    const pc = el('div', 'pcard');
+    pc.appendChild(el('h3', null, '🌍 Savoir par pays'));
+    pc.appendChild(el('p', 'sub', 'Pour chaque pays, des cartes et des cours dans tous les domaines : histoire, géographie, culture, cuisine, sport, économie, nature…'));
+    pc.appendChild(pbtn('Explorer un pays', 'ghost', function () { go('pays', { pq: '' }); }));
+    body.appendChild(pc);
 
     // collection de badges (un badge par cours)
     body.appendChild(el('h4', null, 'Ma collection de badges'));
@@ -2202,7 +2923,7 @@
     tx.appendChild(el('b', null, r.title));
     if (r.desc) tx.appendChild(el('span', null, r.desc));
     if (r.len) tx.appendChild(el('span', 'tag', sizeLabel(r.len)));
-    card.append(coverEl(r.title, r.thumb), tx);
+    card.append(coverEl(r.title, r.thumb, null, r.desc), tx);
     if (label) card.appendChild(el('span', 'addtag', label));
     card.addEventListener('click', onTap);
     return card;
@@ -2254,6 +2975,7 @@
     sv.busy = true; renderStudy();
     try {
       const art = await fetchArticle(title);
+      if (!safeThumb(art.thumb)) art.thumb = await fetchAnyThumb(art.title);
       const c = newCourse(art);
       if (!c) { sv.busy = false; sv.msg = 'Cet article est trop court pour en faire un cours. Essaie un sujet plus large.'; renderStudy(); return; }
       study.courses.unshift(c);
@@ -2294,11 +3016,13 @@
     const c = courseOf();
     if (!c) { go('home'); return; }
     ensureModel(c);
+    lazyThumb(c);
     body.appendChild(backBtn('Mes cours', function () { go('home'); }));
     const total = c.lessons.length, d = lessonsDone(c);
     const top = el('div', 'pcard');
+    if (safeThumb(c.thumb)) { const bn = el('div', 'banner'); bn.style.backgroundImage = 'url("' + c.thumb + '")'; top.appendChild(bn); }
     const bh = el('div', 'who');
-    const ring = el('div', 'bring big', c.emblem || '📚'); ring.style.borderColor = topTierColor(study.badges.find(function (x) { return x.cid === c.id; }));
+    const ring = ringEl(c.thumb, c.emblem, true); ring.style.borderColor = topTierColor(study.badges.find(function (x) { return x.cid === c.id; }));
     bh.appendChild(ring);
     const bt = el('div'); bt.appendChild(el('div', 'nm', c.title)); bt.appendChild(tierRow(study.badges.find(function (x) { return x.cid === c.id; })));
     bh.appendChild(bt);
@@ -2388,7 +3112,6 @@
       study.courses = study.courses.filter(function (x) { return x.id !== c.id; });
       saveStudy(); go('home');
     }));
-    body.appendChild(el('p', 'src', 'Contenu : Wikipédia, licence CC BY-SA.'));
   }
 
   function lessonLandmarks(text) {
@@ -2431,7 +3154,6 @@
     body.appendChild(nb);
     const tlN = timelineEvents(c, l.mod).length;
     if (tlN >= 3) body.appendChild(pbtn('🕰️ Frise de ce chapitre', 'ghost', function () { go('timeline', { tm: l.mod }); }));
-    body.appendChild(el('p', 'src', 'Source : Wikipédia, licence CC BY-SA.'));
     body.appendChild(el('div', 'gap'));
     body.appendChild(pbtn(l.done ? 'Me retester' : 'Je teste ma mémoire', '', function () { startLessonTest(c, sv.li); }));
     const nav = el('div', 'prow');
@@ -2567,28 +3289,28 @@
       if (!l.done) {
         l.done = true;
         profile.lessons = (profile.lessons || 0) + 1;
-        studyCredit(10, 0);
-        sum.news.push('📖 Leçon terminée ! +' + gain(10) + ' points');
+        studyCredit(25, 0);
+        sum.news.push('📖 Leçon terminée ! +' + gain(25) + ' points');
         if (c.lessons.every(function (x) { return x.done; }) && !c.completed) {
           c.completed = todayKey();
           profile.courses = (profile.courses || 0) + 1;
           awardTier(c, 'bronze', null);
           sum.courseDone = true;
-          studyCredit(50, 0);
+          studyCredit(150, 0);
           sum.news.push('🥉 Cours terminé ! Le badge « ' + c.title + ' » est ajouté à ta collection.');
         }
       }
     } else if (c && S.mode === 'test') {
       const prev = c.tests[S.mi];
       c.tests[S.mi] = Math.max(prev || 0, pct);
-      if (pct >= PASS_TEST && (prev == null || prev < PASS_TEST)) { studyCredit(20, 0); sum.news.push('✅ Chapitre validé ! +' + gain(20) + ' points'); }
+      if (pct >= PASS_TEST && (prev == null || prev < PASS_TEST)) { studyCredit(40, 0); sum.news.push('✅ Chapitre validé ! +' + gain(40) + ' points'); }
     } else if (c && S.mode === 'exam') {
       c.exam = Math.max(c.exam || 0, pct);
       if (pct >= PASS_EXAM && !c.diploma) {
         c.diploma = todayKey();
         profile.diplomas = (profile.diplomas || 0) + 1;
         awardTier(c, 'or', c.exam);
-        studyCredit(50, 0);
+        studyCredit(120, 0);
         sum.news.push('🏅 Examen réussi ! Ton badge passe en or.');
       }
     }
@@ -2631,6 +3353,66 @@
     }
     body.appendChild(r);
     if (sum.courseDone && c) body.appendChild(suggestCard(c));
+  }
+
+  // ---- savoir par pays : toutes les ressources d'un pays, par domaine ----
+  function applyCountryFeed(name, ids, label) {
+    country = name; countryCats = ids.slice();
+    store('curio.country', country); store('curio.countryCats', countryCats);
+    themesLabel();
+    studyPanel.classList.remove('open');
+    toast('🌍 ' + name + (label ? ' · ' + label : '') + ' : tes cartes arrivent');
+    rebuildFeed();
+  }
+  function viewPays(body) {
+    body.appendChild(backBtn('Mes cours', function () { go('home'); }));
+    body.appendChild(el('h2', 'ltitle', '🌍 Savoir par pays'));
+    body.appendChild(el('p', 'sub', 'Choisis un pays : tu accèdes à des cartes et à des cours dans tous les domaines (histoire, géographie, cuisine, sport, économie, nature…).'));
+    const f = el('div', 'pcard pform');
+    const inp = el('input'); inp.type = 'text'; inp.placeholder = 'Chercher un pays…'; inp.value = sv.pq || ''; inp.setAttribute('aria-label', 'Chercher un pays');
+    f.appendChild(inp);
+    body.appendChild(f);
+    const list = el('div');
+    body.appendChild(list);
+    function draw() {
+      list.textContent = '';
+      const q = norm(inp.value);
+      COUNTRIES.slice().sort(function (a, b) { return a.localeCompare(b, 'fr'); }).filter(function (c) { return !q || norm(c).indexOf(q) >= 0; }).forEach(function (c) {
+        const row = el('button', 'lrow'); row.type = 'button';
+        row.appendChild(el('span', 'lt', c));
+        row.appendChild(el('span', 'ls', '›'));
+        row.addEventListener('click', function () { go('hub', { hc: c }); });
+        list.appendChild(row);
+      });
+    }
+    inp.addEventListener('input', function () { sv.pq = inp.value; draw(); });
+    draw();
+  }
+  function viewHub(body) {
+    const name = sv.hc;
+    if (!name) { go('pays'); return; }
+    body.appendChild(backBtn('Pays', function () { go('pays'); }));
+    body.appendChild(el('h2', 'ltitle', '🌍 ' + name));
+    const top = el('div', 'pcard cta');
+    top.appendChild(el('h3', null, 'Tout savoir sur ' + name));
+    const r = el('div', 'prow');
+    r.appendChild(pbtn('🃏 Toutes les cartes', '', function () { applyCountryFeed(name, [], ''); }));
+    r.appendChild(pbtn('📘 Cours général', 'ghost', function () { searchFor(name); }));
+    top.appendChild(r);
+    body.appendChild(top);
+    body.appendChild(el('h4', null, 'Par domaine'));
+    COUNTRY_CATS.forEach(function (c) {
+      const row = el('div', 'drow');
+      row.appendChild(el('span', 'dl', c[1]));
+      const bx = el('div', 'fbtns');
+      const a = el('button', 'sm', 'Cartes'); a.type = 'button';
+      a.addEventListener('click', function () { applyCountryFeed(name, [c[0]], c[1].replace(/^\S+\s/, '')); });
+      const b = el('button', 'sm ghost', 'Cours'); b.type = 'button';
+      b.addEventListener('click', function () { searchFor(c[2].split(' ')[0] + ' ' + name); });
+      bx.append(a, b);
+      row.appendChild(bx);
+      body.appendChild(row);
+    });
   }
 
   function viewTimeline(body) {
@@ -2680,6 +3462,8 @@
     if (n && study.lastNag !== todayKey()) { study.lastNag = todayKey(); saveStudy(); toast('📚 ' + n + ' carte' + (n > 1 ? 's' : '') + ' à réviser aujourd\'hui. Touche le livre !'); }
   }, 2500);
 
+  if (!profile.hintSeen) { profile.hintSeen = 1; saveProfile(); setTimeout(function () { toast('👆 Glisse vers le haut pour la carte suivante'); }, 2000); }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   loadMore(4);
 })();
 </script>
