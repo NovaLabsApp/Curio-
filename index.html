@@ -337,6 +337,10 @@
   .credits summary { cursor: pointer; color: var(--muted); font-size: 13.5px; }
   .credits p { margin: 8px 0 0; }
   .cloudrow { margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.1); }
+  .cent { margin: 4px 0 16px -24px; padding-left: 24px; font: 700 12.5px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tth { float: right; width: 52px; height: 52px; margin: 0 0 6px 10px; border-radius: 12px; background: #19203A center/cover; }
+  .tbox .tt { font: 600 17px/1.3 var(--serif); color: var(--ivory); }
+  .tli { cursor: pointer; }
   @media (prefers-reduced-motion: reduce) { #levelup.show .lu-card { animation: none; } .btn.pop { animation: none; } .bg .blur, .frame, #hint, .sheetpanel { transition: none; } }
 </style>
 </head>
@@ -633,6 +637,7 @@
   const PKEYS = window.CURIO_PK.map(function (k) { return 'curio.' + k; });
   function nk(k) { return PKEYS.indexOf(k) >= 0 ? 'curio.u.' + UID + '.' + k.slice(6) : k; }
   let LEVEL = META.level || 'normal';
+  const APP_VERSION = '2026-10-21 · v3';
   const WIKI = 'https://fr.wikipedia.org/w/api.php';
   const feed = document.getElementById('feed');
   const savedCountEl = document.getElementById('savedCount');
@@ -806,7 +811,7 @@
       const lead = ev.text.trim().replace(/([^.!?])$/, '$1.').replace(/^\S/, function (ch) { return ch.toUpperCase(); });
       out.push({ type: 'standard', pageid: 'day:' + ev.year + ':' + pg.pageid, wid: pg.pageid, host: 'fr.wikipedia.org', source: 'day',
         title: title, description: now.getDate() + ' ' + MOIS[now.getMonth()] + ' ' + ev.year + (ago > 0 ? ', il y a ' + ago + ' ans' : ''),
-        lead: lead, extract: lead + ' ' + (pg.extract || ''), thumbnail: pg.thumbnail || null });
+        lead: lead, year: ev.year, extract: lead + ' ' + (pg.extract || ''), thumbnail: pg.thumbnail || null });
     });
     const withImg = out.filter(function (d) { return d.thumbnail; });
     return shuffle(withImg.length >= 5 ? withImg : out);
@@ -828,7 +833,7 @@
       const lead = ev.text.trim().replace(/([^.!?])$/, '$1.').replace(/^\S/, function (ch) { return ch.toUpperCase(); });
       out.push({ type: 'standard', pageid: 'births:' + ev.year + ':' + pg.pageid, wid: pg.pageid, host: 'fr.wikipedia.org', source: 'births',
         title: title, description: 'Né' + ' le ' + now.getDate() + ' ' + MOIS[now.getMonth()] + ' ' + ev.year,
-        lead: lead, extract: lead + ' ' + (pg.extract || ''), thumbnail: pg.thumbnail || null });
+        lead: lead, year: ev.year, extract: lead + ' ' + (pg.extract || ''), thumbnail: pg.thumbnail || null });
     });
     const withImg = out.filter(function (d) { return d.thumbnail; });
     return shuffle(withImg.length >= 5 ? withImg : out);
@@ -1192,7 +1197,12 @@
       store('curio.saved', saved);
       updateCount();
     });
-    actions.appendChild(heart);
+    const tlb = document.createElement('button');
+    tlb.className = 'btn' + (lineHas('l:' + d.pageid) ? ' on' : '');
+    tlb.setAttribute('aria-label', 'Placer sur ma frise chronologique');
+    tlb.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 12h18"/><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg>';
+    tlb.addEventListener('click', function () { placeOnLine(d, tlb); });
+    actions.append(tlb, heart);
 
     card.append(bg, shade, frame, content, actions);
     return card;
@@ -1662,7 +1672,7 @@
   }
 
   function checkBadges() {
-    const c = { friends: (typeof friends !== 'undefined' ? friends.length : 0), best: streakInfo().best, saved: Object.keys(saved).length, dom: (typeof domainCounts === 'function') ? domainCounts() : {}, mastered: (typeof study !== 'undefined') && study.badges.some(function (b) { return !!b.diamant; }) };
+    const c = { line: (typeof study !== 'undefined' && study.line ? study.line.length : 0), friends: (typeof friends !== 'undefined' ? friends.length : 0), best: streakInfo().best, saved: Object.keys(saved).length, dom: (typeof domainCounts === 'function') ? domainCounts() : {}, mastered: (typeof study !== 'undefined') && study.badges.some(function (b) { return !!b.diamant; }) };
     BADGES.forEach(function (b) {
       if (!profile.badges[b[0]] && b[4](profile, c)) {
         profile.badges[b[0]] = dayKey(new Date());
@@ -2024,6 +2034,7 @@
     const crs = document.createElement('summary'); crs.textContent = 'Crédits et licences';
     cr.appendChild(crs);
     cr.appendChild(el('p', 'sub', 'Les textes et les images des cartes et des cours proviennent de projets de la fondation Wikimédia (encyclopédie et guide de voyage) et de Vikidia. Ils sont publiés sous licence libre CC BY-SA, qui demande de citer leur origine : c\'est le but de cette mention.'));
+    cr.appendChild(el('p', 'sub', 'Version de l\'application : ' + APP_VERSION));
     stg.appendChild(cr);
     body.appendChild(stg);
 
@@ -2304,6 +2315,7 @@
   if (!Array.isArray(study.ach)) study.ach = [];
   if (!Array.isArray(study.badges)) study.badges = [];
   if (!Array.isArray(study.deck)) study.deck = [];
+  if (!Array.isArray(study.line)) study.line = [];
   const DECK = { id: 'deck', title: 'Mes cartes sauvegardées' };
   if (!study.stats || !study.stats.days) study.stats = { days: {} };
   function saveStudy() { try { localStorage.setItem(nk('curio.study'), JSON.stringify(study)); return true; } catch (e) { toast('Stockage plein : supprime un cours'); return false; } }
@@ -2690,6 +2702,51 @@
     if (n) { study.deckHint = 1; saveStudy(); }
   }
 
+  // ---- ma frise chronologique : placer les personnages et événements des cartes ----
+  BADGES.push(['tl10', '🕰️', 'Chronologue', 'Placer 10 repères sur ta frise', function (p, c) { return c.line >= 10; }]);
+  function yearLabel(y) { return y < 0 ? Math.abs(y) + ' av. J.-C.' : String(y); }
+  function toRoman(n) {
+    const m = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+    let r = '';
+    m.forEach(function (q) { while (n >= q[0]) { r += q[1]; n -= q[0]; } });
+    return r;
+  }
+  function centuryLabel(y) { const c = Math.ceil(Math.abs(y) / 100) || 1; return (c === 1 ? 'Ier' : toRoman(c) + 'e') + ' siècle' + (y < 0 ? ' av. J.-C.' : ''); }
+  function guessYear(d) {
+    if (typeof d.year === 'number' && d.year > -5000 && d.year < 2200 && d.year !== 0) return d.year;
+    const t = String(d.extract || '').slice(0, 260);
+    const m = /\((?:né|née|n\.)[^)]{0,60}?(\d{3,4})/i.exec(t) || /(?:^|[^\d])(1[0-9]{3}|20[0-2][0-9]|[3-9][0-9]{2})\b/.exec(t);
+    if (!m) return null;
+    const y = parseInt(m[1], 10);
+    const after = t.slice(m.index + m[0].length, m.index + m[0].length + 14);
+    return /^\s*av\.?\s*J/i.test(after) ? -y : y;
+  }
+  const PERSON_RE = /chanteu|écrivain|peintre|\broi\b|reine|général|empereur|philosophe|scientifique|acteur|actrice|compositeur|poète|personnalité|footballeur|joueur|président|ministre|savant|explorateur|inventeur|architecte|réalisateur|musicien|guitariste|pianiste|sculpteur|mathématicien|physicien|chimiste|biologiste|homme politique|femme politique|militaire|navigateur|astronome|dramaturge|cinéaste|historien|journaliste|sportif|pilote|astronaute/i;
+  function lineHas(id) { return study.line.some(function (x) { return x.id === id; }); }
+  function addToLine(item) {
+    if (study.line.length >= 300) { toast('300 repères maximum sur ta frise'); return false; }
+    study.line.push(item);
+    saveStudy(); checkBadges(); saveProfile();
+    return true;
+  }
+  function placeOnLine(d, btn) {
+    const id = 'l:' + d.pageid;
+    const i = study.line.findIndex(function (x) { return x.id === id; });
+    if (i >= 0) { study.line.splice(i, 1); saveStudy(); btn.classList.remove('on'); toast('Retiré de ta frise'); return; }
+    let y = guessYear(d);
+    if (y == null) {
+      const a = prompt('En quelle année placer « ' + d.title + ' » ? (par exemple 1789, ou -44 pour 44 av. J.-C.)');
+      if (a == null) return;
+      y = parseInt(String(a).trim(), 10);
+      if (!isFinite(y) || y < -5000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
+    }
+    const person = d.source === 'births' || PERSON_RE.test(d.description || '');
+    if (addToLine({ id: id, y: y, kind: person ? 'person' : 'event', title: d.title, text: gist(d.extract || '').slice(0, 170), thumb: (imageUrls(d).slice(-1)[0]) || '', tag: d.topicKey || '' })) {
+      btn.classList.add('on');
+      toast('📍 Placé en ' + yearLabel(y) + ' sur ta frise');
+    }
+  }
+
   // ---- frise chronologique ----
   function timelineEvents(c, mi) {
     const out = [];
@@ -2806,7 +2863,7 @@
 
   function renderStudy() {
     studyBody.textContent = '';
-    ({ home: viewHome, nw: viewNew, course: viewCourse, lesson: viewLesson, session: viewSession, summary: viewSummary, timeline: viewTimeline, pays: viewPays, hub: viewHub })[sv.view](studyBody);
+    ({ home: viewHome, nw: viewNew, course: viewCourse, lesson: viewLesson, session: viewSession, summary: viewSummary, timeline: viewTimeline, pays: viewPays, hub: viewHub, myline: viewMyLine })[sv.view](studyBody);
     updateStudyBadge();
   }
 
@@ -2866,6 +2923,11 @@
     body.appendChild(el('div', 'gap'));
     body.appendChild(pbtn('+ Nouveau cours', '', function () { go('nw', { q: '', res: null, msg: '' }); }));
     body.appendChild(el('div', 'gap'));
+    const lc = el('div', 'pcard');
+    lc.appendChild(el('h3', null, '🕰️ Ma frise chronologique'));
+    lc.appendChild(el('p', 'sub', study.line.length ? study.line.length + ' repère' + (study.line.length > 1 ? 's' : '') + ' placé' + (study.line.length > 1 ? 's' : '') + '. Place les personnages et événements des cartes avec le bouton 🕰️.' : 'Place les personnages et les événements que tu découvres sur une ligne du temps : bouton 🕰️ sur chaque carte.'));
+    lc.appendChild(pbtn('Ouvrir ma frise', 'ghost', function () { go('myline', { lf: 'all' }); }));
+    body.appendChild(lc);
     const pc = el('div', 'pcard');
     pc.appendChild(el('h3', null, '🌍 Savoir par pays'));
     pc.appendChild(el('p', 'sub', 'Pour chaque pays, des cartes et des cours dans tous les domaines : histoire, géographie, culture, cuisine, sport, économie, nature…'));
@@ -3415,6 +3477,79 @@
     });
   }
 
+  function viewMyLine(body) {
+    body.appendChild(backBtn('Mes cours', function () { go('home'); }));
+    body.appendChild(el('h2', 'ltitle', '🕰️ Ma frise chronologique'));
+    body.appendChild(el('p', 'sub', 'Place ici les personnages et les événements que tu découvres : touche le bouton 🕰️ sur une carte. Tout est classé du plus ancien au plus récent.'));
+    const bar = el('div', 'prow');
+    bar.appendChild(pbtn('+ Ajouter un repère', '', function () {
+      const t = prompt('Nom du personnage ou de l\'événement ?');
+      if (!t || !t.trim()) return;
+      const a = prompt('En quelle année ? (par exemple 1789, ou -44 pour 44 av. J.-C.)');
+      if (a == null) return;
+      const y = parseInt(String(a).trim(), 10);
+      if (!isFinite(y) || y < -5000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
+      const person = confirm('C\'est un personnage ?\nOK = personnage, Annuler = événement');
+      if (addToLine({ id: 'm:' + Date.now().toString(36), y: y, kind: person ? 'person' : 'event', title: t.trim().slice(0, 80), text: '', thumb: '', tag: '' })) renderStudy();
+    }));
+    bar.appendChild(pbtn('Ajouter mes cartes ♥', 'ghost', function () {
+      let n = 0;
+      Object.keys(saved).forEach(function (k) {
+        const sv0 = saved[k], id = 'l:' + k;
+        if (lineHas(id)) return;
+        const y = guessYear({ extract: sv0.extract || sv0.gist });
+        if (y == null) return;
+        if (study.line.length < 300) { study.line.push({ id: id, y: y, kind: PERSON_RE.test(sv0.extract || '') ? 'person' : 'event', title: sv0.title, text: (sv0.gist || '').slice(0, 170), thumb: sv0.thumb || '', tag: '' }); n++; }
+      });
+      if (n) { saveStudy(); checkBadges(); saveProfile(); }
+      toast(n ? n + ' carte' + (n > 1 ? 's' : '') + ' ajoutée' + (n > 1 ? 's' : '') + ' à ta frise' : 'Aucune carte ♥ avec une date trouvée');
+      renderStudy();
+    }));
+    body.appendChild(bar);
+    const f = sv.lf || 'all';
+    const chips = el('div', 'chips'); chips.style.margin = '16px 0';
+    [['all', 'Tout'], ['person', '👤 Personnages'], ['event', '📅 Événements']].forEach(function (x) {
+      const b = el('button', 'chip', x[1]); b.type = 'button'; b.setAttribute('aria-pressed', f === x[0] ? 'true' : 'false');
+      b.addEventListener('click', function () { go('myline', { lf: x[0] }); });
+      chips.appendChild(b);
+    });
+    body.appendChild(chips);
+    const items = study.line.filter(function (x) { return f === 'all' || x.kind === f; }).sort(function (a, b) { return a.y - b.y; });
+    if (!items.length) { body.appendChild(el('p', 'sub', 'Ta frise est vide pour l\'instant. Sur une carte, touche 🕰️ pour y placer un personnage ou un événement.')); return; }
+    body.appendChild(el('p', 'sub', items.length + ' repère' + (items.length > 1 ? 's' : '') + ', du plus ancien au plus récent.'));
+    const tl = el('div', 'tl');
+    let lastC = null;
+    items.forEach(function (x) {
+      const c = centuryLabel(x.y);
+      if (c !== lastC) { tl.appendChild(el('div', 'cent', c)); lastC = c; }
+      const row = el('div', 'tli');
+      row.appendChild(el('span', 'tdot'));
+      const box = el('div', 'tbox');
+      const th = safeThumb(x.thumb);
+      if (th) { const im = el('div', 'tth'); im.style.backgroundImage = 'url("' + th + '")'; box.appendChild(im); }
+      box.appendChild(el('b', null, yearLabel(x.y)));
+      box.appendChild(el('p', 'tt', (x.kind === 'person' ? '👤 ' : '📅 ') + x.title));
+      if (x.text) box.appendChild(el('p', null, x.text));
+      if (x.tag) box.appendChild(el('span', 'tls', '🏷️ ' + x.tag));
+      const act = el('div', 'fbtns'); act.style.marginTop = '8px';
+      const ed = el('button', 'sm ghost', 'Changer l\'année'); ed.type = 'button';
+      ed.addEventListener('click', function () {
+        const a = prompt('Nouvelle année pour « ' + x.title + ' » ? (ex. 1789, ou -44 pour 44 av. J.-C.)', String(x.y));
+        if (a == null) return;
+        const y = parseInt(String(a).trim(), 10);
+        if (!isFinite(y) || y < -5000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
+        x.y = y; saveStudy(); renderStudy();
+      });
+      const rm = el('button', 'sm ghost', '✕'); rm.type = 'button'; rm.setAttribute('aria-label', 'Retirer de la frise');
+      rm.addEventListener('click', function () { study.line = study.line.filter(function (z) { return z.id !== x.id; }); saveStudy(); renderStudy(); });
+      act.append(ed, rm);
+      box.appendChild(act);
+      row.appendChild(box);
+      tl.appendChild(row);
+    });
+    body.appendChild(tl);
+  }
+
   function viewTimeline(body) {
     const c = courseOf();
     if (!c) { go('home'); return; }
@@ -3432,12 +3567,20 @@
     body.appendChild(el('p', 'sub', ev.length + ' repères, du plus ancien au plus récent. Touche-en un pour relire la leçon.'));
     const tl = el('div', 'tl');
     ev.forEach(function (e) {
-      const row = el('button', 'tli'); row.type = 'button';
+      const row = el('div', 'tli'); row.setAttribute('role', 'button');
       row.appendChild(el('span', 'tdot'));
       const box = el('div', 'tbox');
       box.appendChild(el('b', null, e.label));
       box.appendChild(el('p', null, e.text));
       box.appendChild(el('span', 'tls', 'Leçon ' + (e.li + 1)));
+      const idl = 'tc:' + c.id + ':' + e.li + ':' + hashOf(e.text);
+      const ad = el('button', 'sm ghost', lineHas(idl) ? '📍 Sur ma frise' : '📍 Ajouter à ma frise'); ad.type = 'button'; ad.style.marginTop = '8px';
+      ad.addEventListener('click', function (ev2) {
+        ev2.stopPropagation();
+        if (lineHas(idl)) { toast('Déjà sur ta frise'); return; }
+        if (addToLine({ id: idl, y: e.y, kind: 'event', title: e.text.length > 80 ? e.text.slice(0, 77).replace(/\s+\S*$/, '') + '…' : e.text, text: e.text.length > 80 ? e.text : '', thumb: c.thumb || '', tag: c.title })) { ad.textContent = '📍 Sur ma frise'; toast('📍 Ajouté à ta frise'); }
+      });
+      box.appendChild(ad);
       row.appendChild(box);
       row.addEventListener('click', function () { go('lesson', { li: e.li }); });
       tl.appendChild(row);
