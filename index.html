@@ -341,6 +341,28 @@
   .tth { float: right; width: 52px; height: 52px; margin: 0 0 6px 10px; border-radius: 12px; background: #19203A center/cover; }
   .tbox .tt { font: 600 17px/1.3 var(--serif); color: var(--ivory); }
   .tli { cursor: pointer; }
+  .chips.scrollx { flex-wrap: nowrap; overflow-x: auto; padding: 0 18px 6px; scrollbar-width: none; }
+  .chips.scrollx::-webkit-scrollbar { display: none; }
+  .chips.scrollx .chip { flex: none; white-space: nowrap; }
+  .hscroll { overflow-x: auto; overflow-y: hidden; margin: 0 -18px 12px; padding: 0 18px 10px; -webkit-overflow-scrolling: touch; }
+  .hline { position: relative; }
+  .eraband, .subband { position: absolute; display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; color: #fff; border-right: 1px solid rgba(11,15,26,.55); }
+  .eraband { top: 0; height: 34px; font: 700 13px var(--sans); }
+  .subband { top: 36px; height: 26px; font: 600 11px var(--sans); }
+  .axis { position: absolute; left: 0; height: 2px; background: rgba(244,239,228,.55); }
+  .tick { position: absolute; width: 1px; height: 8px; background: rgba(244,239,228,.55); }
+  .tickl { position: absolute; transform: translateX(-30%); font: 10.5px var(--sans); color: var(--muted); white-space: nowrap; }
+  .mk { position: absolute; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); transform: translate(-50%, -50%); z-index: 2; }
+  .stem { position: absolute; width: 1px; background: rgba(244,239,228,.3); }
+  .lbl { position: absolute; width: 150px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.16); background: #141B2E; color: var(--ivory); text-align: left; font-family: var(--sans); cursor: pointer; z-index: 1; }
+  .lbl b { display: block; font: 700 13px var(--serif); color: var(--gold); }
+  .lbl span { display: -webkit-box; margin-top: 2px; font-size: 12px; line-height: 1.25; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .linesheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; max-height: 62dvh; overflow-y: auto; padding: 20px 20px calc(26px + env(safe-area-inset-bottom)); background: #0B0F1A; border-top: 1px solid rgba(255,255,255,.18); border-radius: 24px 24px 0 0; box-shadow: 0 -12px 40px rgba(0,0,0,.5); }
+  .linesheet .lsh { display: flex; align-items: center; justify-content: space-between; }
+  .linesheet .lsh b { font: 700 28px var(--serif); color: var(--gold); }
+  .linesheet .era { margin: 2px 0 10px; font-size: 13.5px; color: var(--muted); }
+  .linesheet .tt { margin: 4px 0 6px; font: 700 19px/1.3 var(--serif); }
+  .linesheet .tth { float: right; width: 64px; height: 64px; margin: 0 0 8px 12px; border-radius: 14px; background: #19203A center/cover; }
   @media (prefers-reduced-motion: reduce) { #levelup.show .lu-card { animation: none; } .btn.pop { animation: none; } .bg .blur, .frame, #hint, .sheetpanel { transition: none; } }
 </style>
 </head>
@@ -637,7 +659,7 @@
   const PKEYS = window.CURIO_PK.map(function (k) { return 'curio.' + k; });
   function nk(k) { return PKEYS.indexOf(k) >= 0 ? 'curio.u.' + UID + '.' + k.slice(6) : k; }
   let LEVEL = META.level || 'normal';
-  const APP_VERSION = '2026-10-21 · v3';
+  const APP_VERSION = '2026-10-21 · v4';
   const WIKI = 'https://fr.wikipedia.org/w/api.php';
   const feed = document.getElementById('feed');
   const savedCountEl = document.getElementById('savedCount');
@@ -2702,6 +2724,38 @@
     if (n) { study.deckHint = 1; saveStudy(); }
   }
 
+  // ---- les époques de l'histoire (frise) ----
+  const ERAS = [
+    { n: 'Préhistoire', c: '#8B6B4A' }, { n: 'Antiquité', c: '#B5543C' }, { n: 'Moyen Âge', c: '#6B5BA8' },
+    { n: 'Temps modernes', c: '#2F7F8F' }, { n: 'Époque contemporaine', c: '#4D8B4A' }
+  ];
+  // [nom, début, fin, largeur en pixels, numéro de l'époque]
+  const SUBS = [
+    ['Préhistoire', -100000, -3300, 130, 0],
+    ['Haute Antiquité', -3300, -800, 260, 1], ['Antiquité classique', -800, 476, 380, 1],
+    ['Haut Moyen Âge', 476, 1000, 220, 2], ['Moyen Âge central', 1000, 1300, 200, 2], ['Bas Moyen Âge', 1300, 1492, 190, 2],
+    ['Renaissance', 1492, 1610, 200, 3], ['Âge classique', 1610, 1715, 190, 3], ['Lumières', 1715, 1789, 190, 3],
+    ['XIXe siècle', 1789, 1914, 330, 4], ['Grande Guerre', 1914, 1918, 110, 4], ['Entre-deux-guerres', 1918, 1939, 150, 4],
+    ['Seconde Guerre mondiale', 1939, 1945, 140, 4], ['Guerre froide', 1945, 1991, 260, 4], ['Monde actuel', 1991, 2100, 170, 4]
+  ];
+  function subOf(y) { for (let i = 0; i < SUBS.length; i++) { if (y < SUBS[i][2]) return SUBS[i]; } return SUBS[SUBS.length - 1]; }
+  function eraOf(y) { const sb = subOf(y); return ERAS[sb[4]].n + ' · ' + sb[0]; }
+  function xOfYear(y) {
+    let acc = 0;
+    for (let i = 0; i < SUBS.length; i++) {
+      const sb = SUBS[i];
+      if (y <= sb[2]) return acc + (Math.max(y, sb[1]) - sb[1]) / (sb[2] - sb[1]) * sb[3];
+      acc += sb[3];
+    }
+    return acc;
+  }
+  function eraRange(ei) {
+    const first = SUBS.findIndex(function (x) { return x[4] === ei; });
+    let last = first;
+    SUBS.forEach(function (x, i) { if (x[4] === ei) last = i; });
+    return { from: SUBS[first][1], to: SUBS[last][2] };
+  }
+
   // ---- ma frise chronologique : placer les personnages et événements des cartes ----
   BADGES.push(['tl10', '🕰️', 'Chronologue', 'Placer 10 repères sur ta frise', function (p, c) { return c.line >= 10; }]);
   function yearLabel(y) { return y < 0 ? Math.abs(y) + ' av. J.-C.' : String(y); }
@@ -2713,7 +2767,7 @@
   }
   function centuryLabel(y) { const c = Math.ceil(Math.abs(y) / 100) || 1; return (c === 1 ? 'Ier' : toRoman(c) + 'e') + ' siècle' + (y < 0 ? ' av. J.-C.' : ''); }
   function guessYear(d) {
-    if (typeof d.year === 'number' && d.year > -5000 && d.year < 2200 && d.year !== 0) return d.year;
+    if (typeof d.year === 'number' && d.year > -100000 && d.year < 2200 && d.year !== 0) return d.year;
     const t = String(d.extract || '').slice(0, 260);
     const m = /\((?:né|née|n\.)[^)]{0,60}?(\d{3,4})/i.exec(t) || /(?:^|[^\d])(1[0-9]{3}|20[0-2][0-9]|[3-9][0-9]{2})\b/.exec(t);
     if (!m) return null;
@@ -2738,12 +2792,12 @@
       const a = prompt('En quelle année placer « ' + d.title + ' » ? (par exemple 1789, ou -44 pour 44 av. J.-C.)');
       if (a == null) return;
       y = parseInt(String(a).trim(), 10);
-      if (!isFinite(y) || y < -5000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
+      if (!isFinite(y) || y < -100000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
     }
     const person = d.source === 'births' || PERSON_RE.test(d.description || '');
     if (addToLine({ id: id, y: y, kind: person ? 'person' : 'event', title: d.title, text: gist(d.extract || '').slice(0, 170), thumb: (imageUrls(d).slice(-1)[0]) || '', tag: d.topicKey || '' })) {
       btn.classList.add('on');
-      toast('📍 Placé en ' + yearLabel(y) + ' sur ta frise');
+      toast('📍 ' + yearLabel(y) + ' · ' + eraOf(y));
     }
   }
 
@@ -2862,6 +2916,8 @@
   function progressBar(pct) { const bar = el('div', 'xpbar'); const f = el('i'); f.style.width = Math.max(0, Math.min(100, pct)) + '%'; bar.appendChild(f); return bar; }
 
   function renderStudy() {
+    const oldSheet = document.getElementById('lineSheet');
+    if (oldSheet) oldSheet.remove();
     studyBody.textContent = '';
     ({ home: viewHome, nw: viewNew, course: viewCourse, lesson: viewLesson, session: viewSession, summary: viewSummary, timeline: viewTimeline, pays: viewPays, hub: viewHub, myline: viewMyLine })[sv.view](studyBody);
     updateStudyBadge();
@@ -3477,10 +3533,103 @@
     });
   }
 
+  function showLineDetail(x) {
+    const old = document.getElementById('lineSheet');
+    if (old) old.remove();
+    const sh = el('div', 'linesheet'); sh.id = 'lineSheet';
+    const top = el('div', 'lsh');
+    top.appendChild(el('b', null, yearLabel(x.y)));
+    const close = el('button', 'sm ghost', 'Fermer'); close.type = 'button';
+    close.addEventListener('click', function () { sh.remove(); });
+    top.appendChild(close);
+    sh.appendChild(top);
+    sh.appendChild(el('div', 'era', eraOf(x.y)));
+    const th = safeThumb(x.thumb);
+    if (th) { const im = el('div', 'tth'); im.style.backgroundImage = 'url("' + th + '")'; sh.appendChild(im); }
+    sh.appendChild(el('p', 'tt', (x.kind === 'person' ? '👤 ' : '📅 ') + x.title));
+    if (x.text) sh.appendChild(el('p', 'sub', x.text));
+    if (x.tag) sh.appendChild(el('span', 'tls', '🏷️ ' + x.tag));
+    const act = el('div', 'prow');
+    const ed = el('button', 'sm', 'Changer l\'année'); ed.type = 'button';
+    ed.addEventListener('click', function () {
+      const a = prompt('Nouvelle année pour « ' + x.title + ' » ? (ex. 1789, ou -44 pour 44 av. J.-C.)', String(x.y));
+      if (a == null) return;
+      const y = parseInt(String(a).trim(), 10);
+      if (!isFinite(y) || y < -100000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
+      x.y = y; saveStudy(); sh.remove(); renderStudy();
+    });
+    const rm = el('button', 'sm ghost', 'Retirer de la frise'); rm.type = 'button';
+    rm.addEventListener('click', function () { study.line = study.line.filter(function (z) { return z.id !== x.id; }); saveStudy(); sh.remove(); renderStudy(); });
+    act.append(ed, rm);
+    sh.appendChild(act);
+    document.body.appendChild(sh);
+  }
+
+  function buildFrise(items, ei) {
+    // zone affichée : toute la frise, ou une seule époque
+    const whole = ei < 0;
+    const r = whole ? { from: SUBS[0][1], to: SUBS[SUBS.length - 1][2] } : eraRange(ei);
+    const subs = SUBS.filter(function (x) { return whole || x[4] === ei; });
+    const x0 = xOfYear(r.from);
+    const W = Math.round(xOfYear(r.to) - x0);
+    const wrap = el('div', 'hscroll');
+    const line = el('div', 'hline');
+    // bandes des grandes époques
+    ERAS.forEach(function (e, i) {
+      if (!whole && i !== ei) return;
+      const rg = eraRange(i);
+      const l = xOfYear(rg.from) - x0, w = xOfYear(rg.to) - xOfYear(rg.from);
+      const b = el('div', 'eraband', e.n); b.style.left = l + 'px'; b.style.width = w + 'px'; b.style.background = e.c;
+      line.appendChild(b);
+    });
+    // bandes des sous-époques
+    subs.forEach(function (sb) {
+      const l = xOfYear(sb[1]) - x0, w = sb[3];
+      const b = el('div', 'subband', w >= 58 ? sb[0] : ''); b.title = sb[0] + ' (' + yearLabel(sb[1]) + ' → ' + yearLabel(sb[2]) + ')';
+      b.style.left = l + 'px'; b.style.width = w + 'px'; b.style.background = ERAS[sb[4]].c + 'B0';
+      line.appendChild(b);
+    });
+    const axisY = 74;
+    const axis = el('div', 'axis'); axis.style.top = axisY + 'px'; axis.style.width = W + 'px'; line.appendChild(axis);
+    subs.forEach(function (sb, i) {
+      const x = xOfYear(sb[1]) - x0;
+      const t = el('div', 'tick'); t.style.left = x + 'px'; t.style.top = (axisY - 3) + 'px'; line.appendChild(t);
+      if (i === 0 || sb[3] >= 58 || true) {
+        const tl = el('div', 'tickl', sb[1] <= -100000 ? '' : yearLabel(sb[1])); tl.style.left = Math.max(14, x) + 'px'; tl.style.top = (axisY + 6) + 'px'; line.appendChild(tl);
+      }
+    });
+    // repères : rangées pour éviter les chevauchements
+    const LBL_W = 150, TIER_H = 64, TOP = axisY + 28;
+    const placed = items.map(function (it) { return { it: it, x: xOfYear(it.y) - x0 }; }).sort(function (a, b) { return a.x - b.x; });
+    const tiers = [];
+    placed.forEach(function (pl) {
+      const left = Math.min(Math.max(pl.x - 6, 0), Math.max(0, W - LBL_W));
+      let t = 0;
+      while (t < tiers.length && tiers[t] + 8 > left) t++;
+      if (t >= 7) t = 6;
+      tiers[t] = left + LBL_W;
+      pl.t = t; pl.left = left;
+    });
+    placed.forEach(function (pl) {
+      const it = pl.it, ty = TOP + pl.t * TIER_H;
+      const stem = el('div', 'stem'); stem.style.left = pl.x + 'px'; stem.style.top = axisY + 'px'; stem.style.height = (ty - axisY) + 'px'; line.appendChild(stem);
+      const mk = el('div', 'mk'); mk.style.left = pl.x + 'px'; mk.style.top = axisY + 'px'; mk.style.background = it.kind === 'person' ? '#D4AF6A' : '#7AA2F7'; line.appendChild(mk);
+      const lb = el('button', 'lbl'); lb.type = 'button'; lb.style.left = pl.left + 'px'; lb.style.top = ty + 'px';
+      lb.appendChild(el('b', null, yearLabel(it.y)));
+      lb.appendChild(el('span', null, (it.kind === 'person' ? '👤 ' : '📅 ') + it.title));
+      lb.addEventListener('click', function () { showLineDetail(it); });
+      line.appendChild(lb);
+    });
+    line.style.width = (W + 20) + 'px';
+    line.style.height = (TOP + Math.max(1, tiers.length) * TIER_H + 10) + 'px';
+    wrap.appendChild(line);
+    return { wrap: wrap, firstX: placed.length ? placed[0].x : 0 };
+  }
+
   function viewMyLine(body) {
     body.appendChild(backBtn('Mes cours', function () { go('home'); }));
     body.appendChild(el('h2', 'ltitle', '🕰️ Ma frise chronologique'));
-    body.appendChild(el('p', 'sub', 'Place ici les personnages et les événements que tu découvres : touche le bouton 🕰️ sur une carte. Tout est classé du plus ancien au plus récent.'));
+    body.appendChild(el('p', 'sub', 'Touche 🕰️ sur une carte : le personnage ou l\'événement se range dans la bonne époque.'));
     const bar = el('div', 'prow');
     bar.appendChild(pbtn('+ Ajouter un repère', '', function () {
       const t = prompt('Nom du personnage ou de l\'événement ?');
@@ -3488,7 +3637,7 @@
       const a = prompt('En quelle année ? (par exemple 1789, ou -44 pour 44 av. J.-C.)');
       if (a == null) return;
       const y = parseInt(String(a).trim(), 10);
-      if (!isFinite(y) || y < -5000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
+      if (!isFinite(y) || y < -100000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
       const person = confirm('C\'est un personnage ?\nOK = personnage, Annuler = événement');
       if (addToLine({ id: 'm:' + Date.now().toString(36), y: y, kind: person ? 'person' : 'event', title: t.trim().slice(0, 80), text: '', thumb: '', tag: '' })) renderStudy();
     }));
@@ -3505,24 +3654,41 @@
       toast(n ? n + ' carte' + (n > 1 ? 's' : '') + ' ajoutée' + (n > 1 ? 's' : '') + ' à ta frise' : 'Aucune carte ♥ avec une date trouvée');
       renderStudy();
     }));
-    body.appendChild(bar);
-    const f = sv.lf || 'all';
-    const chips = el('div', 'chips'); chips.style.margin = '16px 0';
-    [['all', 'Tout'], ['person', '👤 Personnages'], ['event', '📅 Événements']].forEach(function (x) {
-      const b = el('button', 'chip', x[1]); b.type = 'button'; b.setAttribute('aria-pressed', f === x[0] ? 'true' : 'false');
-      b.addEventListener('click', function () { go('myline', { lf: x[0] }); });
-      chips.appendChild(b);
-    });
-    body.appendChild(chips);
-    const items = study.line.filter(function (x) { return f === 'all' || x.kind === f; }).sort(function (a, b) { return a.y - b.y; });
-    if (!items.length) { body.appendChild(el('p', 'sub', 'Ta frise est vide pour l\'instant. Sur une carte, touche 🕰️ pour y placer un personnage ou un événement.')); return; }
+
+    const mode = sv.lm || 'frise', f = sv.lf || 'all', ei = sv.le == null ? -1 : sv.le;
+    const mk = function (label, active, fn) { const b = el('button', 'chip', label); b.type = 'button'; b.setAttribute('aria-pressed', active ? 'true' : 'false'); b.addEventListener('click', fn); return b; };
+    const c1 = el('div', 'chips scrollx'); c1.style.margin = '12px -18px 8px';
+    c1.append(mk('📏 Frise', mode === 'frise', function () { go('myline', { lm: 'frise' }); }), mk('📋 Liste', mode === 'liste', function () { go('myline', { lm: 'liste' }); }));
+    [['all', 'Tout'], ['person', '👤 Personnages'], ['event', '📅 Événements']].forEach(function (x) { c1.appendChild(mk(x[1], f === x[0], function () { go('myline', { lf: x[0] }); })); });
+    body.appendChild(c1);
+    if (mode === 'frise') {
+      const c3 = el('div', 'chips scrollx'); c3.style.margin = '0 -18px 14px';
+      c3.appendChild(mk('Toutes les époques', ei < 0, function () { go('myline', { le: -1 }); }));
+      ERAS.forEach(function (e, i) { c3.appendChild(mk(e.n, ei === i, function () { go('myline', { le: i }); })); });
+      body.appendChild(c3);
+    }
+
+    let items = study.line.filter(function (x) { return f === 'all' || x.kind === f; });
+    if (mode === 'frise' && ei >= 0) { const rg = eraRange(ei); items = items.filter(function (x) { return x.y >= rg.from && x.y < rg.to + (ei === 4 ? 1 : 0); }); }
+    items.sort(function (a, b) { return a.y - b.y; });
+
+    if (mode === 'frise') {
+      const fr = buildFrise(items, ei);
+      body.appendChild(fr.wrap);
+      if (!items.length) body.appendChild(el('p', 'sub', 'Aucun repère dans cette partie de la frise. Sur une carte, touche 🕰️ pour y placer un personnage ou un événement.'));
+      else body.appendChild(el('p', 'sub', items.length + ' repère' + (items.length > 1 ? 's' : '') + '. Fais glisser la frise de gauche à droite, touche un repère pour le détail. Doré = personnage, bleu = événement.'));
+      requestAnimationFrame(function () { fr.wrap.scrollLeft = Math.max(0, fr.firstX - 30); });
+      body.appendChild(bar);
+      return;
+    }
+    if (!items.length) { body.appendChild(el('p', 'sub', 'Ta frise est vide pour l\'instant. Sur une carte, touche 🕰️ pour y placer un personnage ou un événement.')); body.appendChild(bar); return; }
     body.appendChild(el('p', 'sub', items.length + ' repère' + (items.length > 1 ? 's' : '') + ', du plus ancien au plus récent.'));
     const tl = el('div', 'tl');
     let lastC = null;
     items.forEach(function (x) {
-      const c = centuryLabel(x.y);
+      const c = eraOf(x.y);
       if (c !== lastC) { tl.appendChild(el('div', 'cent', c)); lastC = c; }
-      const row = el('div', 'tli');
+      const row = el('div', 'tli'); row.setAttribute('role', 'button');
       row.appendChild(el('span', 'tdot'));
       const box = el('div', 'tbox');
       const th = safeThumb(x.thumb);
@@ -3531,23 +3697,12 @@
       box.appendChild(el('p', 'tt', (x.kind === 'person' ? '👤 ' : '📅 ') + x.title));
       if (x.text) box.appendChild(el('p', null, x.text));
       if (x.tag) box.appendChild(el('span', 'tls', '🏷️ ' + x.tag));
-      const act = el('div', 'fbtns'); act.style.marginTop = '8px';
-      const ed = el('button', 'sm ghost', 'Changer l\'année'); ed.type = 'button';
-      ed.addEventListener('click', function () {
-        const a = prompt('Nouvelle année pour « ' + x.title + ' » ? (ex. 1789, ou -44 pour 44 av. J.-C.)', String(x.y));
-        if (a == null) return;
-        const y = parseInt(String(a).trim(), 10);
-        if (!isFinite(y) || y < -5000 || y > 2200 || y === 0) { toast('Année non valide'); return; }
-        x.y = y; saveStudy(); renderStudy();
-      });
-      const rm = el('button', 'sm ghost', '✕'); rm.type = 'button'; rm.setAttribute('aria-label', 'Retirer de la frise');
-      rm.addEventListener('click', function () { study.line = study.line.filter(function (z) { return z.id !== x.id; }); saveStudy(); renderStudy(); });
-      act.append(ed, rm);
-      box.appendChild(act);
       row.appendChild(box);
+      row.addEventListener('click', function () { showLineDetail(x); });
       tl.appendChild(row);
     });
     body.appendChild(tl);
+    body.appendChild(bar);
   }
 
   function viewTimeline(body) {
@@ -3598,7 +3753,7 @@
   function openStudy() { sv.view = 'home'; sv.sess = null; sv.related = null; renderStudy(); studyPanel.classList.add('open'); studyPanel.scrollTop = 0; }
   document.getElementById('studyBtn').addEventListener('click', openStudy);
   syncDeckFromSaved();
-  document.getElementById('closeStudy').addEventListener('click', function () { studyPanel.classList.remove('open'); });
+  document.getElementById('closeStudy').addEventListener('click', function () { studyPanel.classList.remove('open'); const sh = document.getElementById('lineSheet'); if (sh) sh.remove(); });
   updateStudyBadge();
   setTimeout(function () {
     const n = dueCards().length;
